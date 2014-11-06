@@ -232,6 +232,11 @@ pub unsafe fn luaL_addchar(B: *mut luaL_Buffer, c: c_char) {
   (*B).n += 1;
 }
 
+#[inline(always)]
+pub unsafe fn luaL_addsize(B: *mut luaL_Buffer, s: size_t) {
+  (*B).n += s;
+}
+
 extern {
   pub fn luaL_buffinit(L: *mut lua_State, B: *mut luaL_Buffer);
   pub fn luaL_prepbuffsize(B: *mut luaL_Buffer, sz: size_t) -> *mut c_char;
