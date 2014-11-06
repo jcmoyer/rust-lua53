@@ -34,7 +34,7 @@ pub const LUA_ERRFILE: c_int = lua::LUA_ERRERR + 1;
 
 #[repr(C)]
 pub struct luaL_Reg {
-  name: *const char,
+  name: *const c_char,
   func: lua_CFunction,
 }
 
@@ -67,7 +67,7 @@ extern {
   pub fn luaL_checkudata(L: *mut lua_State, ud: c_int, tname: *const c_char) -> *mut c_void;
 
   pub fn luaL_where(L: *mut lua_State, lvl: c_int) -> c_int;
-  pub fn luaL_error(L: *mut lua_State, fmt: *const char, ...) -> c_int;
+  pub fn luaL_error(L: *mut lua_State, fmt: *const c_char, ...) -> c_int;
 
   // TODO: test this
   pub fn luaL_checkoption(L: *mut lua_State, arg: c_int, def: *const c_char, lst: [*const c_char]) -> c_int;
@@ -240,8 +240,8 @@ pub unsafe fn luaL_addsize(B: *mut luaL_Buffer, s: size_t) {
 extern {
   pub fn luaL_buffinit(L: *mut lua_State, B: *mut luaL_Buffer);
   pub fn luaL_prepbuffsize(B: *mut luaL_Buffer, sz: size_t) -> *mut c_char;
-  pub fn luaL_addlstring(B: *mut luaL_Buffer, s: *const char, l: size_t);
-  pub fn luaL_addstring(B: *mut luaL_Buffer, s: *const char);
+  pub fn luaL_addlstring(B: *mut luaL_Buffer, s: *const c_char, l: size_t);
+  pub fn luaL_addstring(B: *mut luaL_Buffer, s: *const c_char);
   pub fn luaL_addvalue(B: *mut luaL_Buffer);
   pub fn luaL_pushresult(B: *mut luaL_Buffer);
   pub fn luaL_pushresultsize(B: *mut luaL_Buffer, sz: size_t);

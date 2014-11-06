@@ -179,7 +179,7 @@ extern {
   pub fn lua_pushstring(L: *mut lua_State, s: *const c_char) -> *const c_char;
   // TODO: omitted:
   // lua_pushvfstring
-  pub fn lua_pushfstring(L: *mut lua_State, fmt: *const char, ...) -> *const char;
+  pub fn lua_pushfstring(L: *mut lua_State, fmt: *const c_char, ...) -> *const c_char;
   pub fn lua_pushcclosure(L: *mut lua_State, f: lua_CFunction, n: c_int);
   pub fn lua_pushboolean(L: *mut lua_State, b: c_int);
   pub fn lua_pushlightuserdata(L: *mut lua_State, p: *mut c_void);
@@ -400,7 +400,7 @@ pub type lua_Hook = Option<fn(L: *mut lua_State, ar: *mut lua_Debug)>;
 
 extern {
   pub fn lua_getstack(L: *mut lua_State, level: c_int, ar: *mut lua_Debug) -> c_int;
-  pub fn lua_getinfo(L: *mut lua_State, what: *const char, ar: *mut lua_Debug) -> c_int;
+  pub fn lua_getinfo(L: *mut lua_State, what: *const c_char, ar: *mut lua_Debug) -> c_int;
   pub fn lua_getlocal(L: *mut lua_State, ar: *const lua_Debug, n: c_int) -> *const c_char;
   pub fn lua_setlocal(L: *mut lua_State, ar: *const lua_Debug, n: c_int) -> *const c_char;
   pub fn lua_getupvalue(L: *mut lua_State, funcindex: c_int, n: c_int) -> *const c_char;
