@@ -179,7 +179,7 @@ extern {
   pub fn lua_pushstring(L: *mut lua_State, s: *const c_char) -> *const c_char;
   // TODO: omitted:
   // lua_pushvfstring
-  // lua_pushfstring
+  pub fn lua_pushfstring(L: *mut lua_State, fmt: *const char, ...) -> *const char;
   pub fn lua_pushcclosure(L: *mut lua_State, f: lua_CFunction, n: c_int);
   pub fn lua_pushboolean(L: *mut lua_State, b: c_int);
   pub fn lua_pushlightuserdata(L: *mut lua_State, p: *mut c_void);
