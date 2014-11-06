@@ -22,19 +22,20 @@
 
 // corresponds to lualib.h
 use ffi::lua::lua_State;
+use libc::c_int;
 
 extern {
-  pub fn luaopen_base(L: *mut lua_State);
-  pub fn luaopen_coroutine(L: *mut lua_State);
-  pub fn luaopen_table(L: *mut lua_State);
-  pub fn luaopen_io(L: *mut lua_State);
-  pub fn luaopen_os(L: *mut lua_State);
-  pub fn luaopen_string(L: *mut lua_State);
-  pub fn luaopen_utf8(L: *mut lua_State);
-  pub fn luaopen_bit32(L: *mut lua_State);
-  pub fn luaopen_math(L: *mut lua_State);
-  pub fn luaopen_debug(L: *mut lua_State);
-  pub fn luaopen_package(L: *mut lua_State);
+  pub fn luaopen_base(L: *mut lua_State) -> c_int;
+  pub fn luaopen_coroutine(L: *mut lua_State) -> c_int;
+  pub fn luaopen_table(L: *mut lua_State) -> c_int;
+  pub fn luaopen_io(L: *mut lua_State) -> c_int;
+  pub fn luaopen_os(L: *mut lua_State) -> c_int;
+  pub fn luaopen_string(L: *mut lua_State) -> c_int;
+  pub fn luaopen_utf8(L: *mut lua_State) -> c_int;
+  pub fn luaopen_bit32(L: *mut lua_State) -> c_int;
+  pub fn luaopen_math(L: *mut lua_State) -> c_int;
+  pub fn luaopen_debug(L: *mut lua_State) -> c_int;
+  pub fn luaopen_package(L: *mut lua_State) -> c_int;
 
   pub fn luaL_openlibs(L: *mut lua_State);
 }
