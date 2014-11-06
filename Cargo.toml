@@ -1,0 +1,6 @@
+[package]
+
+name = "lua"
+version = "0.0.1"
+authors = ["J.C. Moyer"]
+
