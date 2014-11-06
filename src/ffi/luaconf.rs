@@ -35,3 +35,16 @@ pub use super::glue::LUAI_FIRSTPSEUDOIDX;
 
 pub use super::glue::LUA_CTXT;
 
+use super::lua::{lua_Number, lua_Integer};
+use libc::c_int;
+
+#[inline(always)]
+pub unsafe fn lua_numtointeger(n: lua_Number, p: *mut lua_Integer) -> c_int {
+  if n >= (LUA_MININTEGER as LUA_NUMBER) && n < -(LUA_MININTEGER as LUA_NUMBER) {
+    *p = n as LUA_INTEGER;
+    1
+  } else {
+    0
+  }
+}
+
