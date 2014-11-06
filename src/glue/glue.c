@@ -51,7 +51,6 @@ size_t escape(const char* in, char* out, size_t szout) {
   char* po = out;
   int inlen = strlen(in);
   size_t written = 0;
-  printf("%d\n", inlen);
 
   for (pi = in; pi < in + inlen; pi++) {
     switch (*pi) {
@@ -79,7 +78,6 @@ size_t escape(const char* in, char* out, size_t szout) {
     *po++ = '\0';
     written++;
   }
-  printf("%s\n", out);
   return written;
 }
 
