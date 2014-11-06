@@ -27,6 +27,10 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+// Macros taken from https://gcc.gnu.org/onlinedocs/cpp/Stringification.html
+#define xstr(s) str(s)
+#define str(s) #s
+
 const char* rs_int_type(int width) {
   switch (width) {
     default:
@@ -109,6 +113,7 @@ int main(int argc, const char** argv) {
   fprintf(f, "#![allow(unused_imports, dead_code, non_camel_case_types)]\n");
   fprintf(f, "use libc::{c_int, c_uint, c_long, c_ulong, c_longlong, c_ulonglong};\n");
   fprintf(f, "use libc::{c_float, c_double};\n");
+  fprintf(f, "use libc::{intptr_t, ptrdiff_t};\n");
 
   write_str_const(f, "LUA_VDIR", LUA_VDIR);
   write_str_const(f, "LUA_PATH_DEFAULT", LUA_PATH_DEFAULT);
@@ -119,7 +124,9 @@ int main(int argc, const char** argv) {
   fprintf(f, "pub const LUA_EXTRASPACE: c_int = %d;\n", LUA_EXTRASPACE);
   fprintf(f, "pub const LUA_IDSIZE: c_int = %d;\n", LUA_IDSIZE);
   fprintf(f, "pub const LUAI_MAXSHORTLEN: c_int = %d;\n", LUAI_MAXSHORTLEN);
-  // LUA_CTXT?
+  
+  fprintf(f, "pub type LUA_CTXT = "xstr(LUA_CTXT)";\n");
+
   fprintf(f, "pub const LUAI_BITSINT: c_int = %d;\n", LUAI_BITSINT);
   // LUA_INT32? LUAI_UMEM? LUAI_MEM?
   fprintf(f, "pub const LUAI_MAXSTACK: c_int = %d;\n", LUAI_MAXSTACK);

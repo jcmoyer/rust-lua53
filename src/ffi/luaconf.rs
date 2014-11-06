@@ -21,8 +21,6 @@
 // THE SOFTWARE.
 
 // corresponds to luaconf.h
-use libc::{intptr_t};
-
 pub use super::glue::LUAL_BUFFERSIZE;
 pub use super::glue::LUA_NUMBER;
 pub use super::glue::LUA_INTEGER;
@@ -35,5 +33,5 @@ pub use super::glue::LUAI_MAXSTACK;
 pub use super::glue::LUAL_NUMSIZES;
 pub use super::glue::LUAI_FIRSTPSEUDOIDX;
 
-pub type LUA_CTXT = intptr_t;
+pub use super::glue::LUA_CTXT;
 
