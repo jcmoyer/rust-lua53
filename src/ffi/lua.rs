@@ -136,7 +136,7 @@ extern {
   pub fn lua_tolstring(L: *mut lua_State, idx: c_int, len: *mut size_t) -> *const c_char;
   pub fn lua_rawlen(L: *mut lua_State, idx: c_int) -> size_t;
   pub fn lua_tocfunction(L: *mut lua_State, idx: c_int) -> lua_CFunction;
-  pub fn lua_touserdata(L: *mut lua_State, idx: c_int);
+  pub fn lua_touserdata(L: *mut lua_State, idx: c_int) -> *mut c_void;
   pub fn lua_tothread(L: *mut lua_State, idx: c_int) -> *mut lua_State;
   pub fn lua_topointer(L: *mut lua_State, idx: c_int) -> *const c_void;
 }
