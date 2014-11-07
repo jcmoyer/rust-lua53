@@ -220,6 +220,9 @@ pub use self::lauxlib::luaL_unref;
 pub use self::lauxlib::luaL_where;
 
 // commonly used constants from lua.h
+pub use self::lua::LUA_MULTRET;
+pub use self::lua::LUA_REGISTRYINDEX;
+
 pub use self::lua::{LUA_RIDX_MAINTHREAD, LUA_RIDX_GLOBALS};
 
 pub use self::lua::{LUA_OPADD, LUA_OPSUB, LUA_OPMUL, LUA_OPDIV, LUA_OPIDIV};
