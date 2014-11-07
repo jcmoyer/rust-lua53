@@ -112,7 +112,7 @@ extern {
 }
 
 #[inline(always)]
-#[allow(unused_variable)]
+#[allow(unused_variables)]
 pub unsafe fn luaL_newlibtable(L: *mut lua_State, l: *const luaL_Reg) {
   // TODO: figure out how to pass an appropriate hint for the second param
   // this involves correcting the second parameter's type; in C this is
