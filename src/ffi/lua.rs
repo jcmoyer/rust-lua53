@@ -218,7 +218,7 @@ extern {
   pub fn lua_callk(L: *mut lua_State, nargs: c_int, nresults: c_int, ctx: lua_Ctx, k: lua_KFunction);
   pub fn lua_pcallk(L: *mut lua_State, nargs: c_int, nresults: c_int, errfunc: c_int, ctx: lua_Ctx, k: lua_KFunction) -> c_int;
   pub fn lua_load(L: *mut lua_State, reader: lua_Reader, dt: *mut c_void, chunkname: *const c_char, mode: *const c_char) -> c_int;
-  pub fn lua_dump(L: *mut lua_State, writer: lua_Writer, data: *mut c_void, strip: c_int);
+  pub fn lua_dump(L: *mut lua_State, writer: lua_Writer, data: *mut c_void, strip: c_int) -> c_int;
 }
 
 #[inline(always)]
