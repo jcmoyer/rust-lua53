@@ -34,8 +34,8 @@ pub const LUA_ERRFILE: c_int = lua::LUA_ERRERR + 1;
 
 #[repr(C)]
 pub struct luaL_Reg {
-  name: *const c_char,
-  func: lua_CFunction,
+  pub name: *const c_char,
+  pub func: lua_CFunction,
 }
 
 #[inline(always)]
