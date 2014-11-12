@@ -28,6 +28,7 @@ use ffi::luaconf::LUAL_BUFFERSIZE;
 use std::ptr;
 
 pub use super::glue::LUAL_NUMSIZES;
+pub use super::glue::LUA_FILEHANDLE;
 
 // extra error code for 'luaL_load'
 pub const LUA_ERRFILE: c_int = lua::LUA_ERRERR + 1;
@@ -251,8 +252,6 @@ extern {
 pub unsafe fn luaL_prepbuffer(B: *mut luaL_Buffer) -> *mut c_char {
   luaL_prepbuffsize(B, LUAL_BUFFERSIZE as size_t)
 }
-
-// omitted: LUA_FILEHANDLE
 
 #[repr(C)]
 pub struct luaL_Stream {

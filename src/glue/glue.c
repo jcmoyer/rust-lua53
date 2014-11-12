@@ -157,6 +157,7 @@ int main(int argc, const char** argv) {
 
   fprintf(f, "/* lauxlib.h */\n");
   fprintf(f, "pub const LUAL_NUMSIZES: c_int = %d;\n", LUAL_NUMSIZES);
+  write_str_const(f, "LUA_FILEHANDLE", LUA_FILEHANDLE);
 
   fclose(f);
 

@@ -242,7 +242,7 @@ pub use self::lua::{LUA_GCSTEP, LUA_GCSETPAUSE, LUA_GCSETSTEPMUL, LUA_GCISRUNNIN
 
 // constants from lauxlib.h
 pub use self::lauxlib::{LUA_REFNIL, LUA_NOREF};
-pub use self::lauxlib::LUA_ERRFILE;
+pub use self::lauxlib::{LUA_ERRFILE, LUA_FILEHANDLE};
 
 mod glue;
 pub mod luaconf;
