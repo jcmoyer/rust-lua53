@@ -70,7 +70,7 @@ extern {
   pub fn luaL_error(L: *mut lua_State, fmt: *const c_char, ...) -> c_int;
 
   // TODO: test this
-  pub fn luaL_checkoption(L: *mut lua_State, arg: c_int, def: *const c_char, lst: [*const c_char]) -> c_int;
+  pub fn luaL_checkoption(L: *mut lua_State, arg: c_int, def: *const c_char, lst: *const *const c_char) -> c_int;
 
   pub fn luaL_fileresult(L: *mut lua_State, stat: c_int, fname: *const c_char) -> c_int;
   pub fn luaL_execresult(L: *mut lua_State, stat: c_int) -> c_int;
