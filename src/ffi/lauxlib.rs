@@ -255,7 +255,7 @@ pub unsafe fn luaL_prepbuffer(B: *mut luaL_Buffer) -> *mut c_char {
 
 #[repr(C)]
 pub struct luaL_Stream {
-  f: *mut c_void,
+  f: *mut ::libc::FILE,
   closef: lua_CFunction
 }
 
