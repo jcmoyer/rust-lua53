@@ -417,18 +417,19 @@ extern {
 
 #[repr(C)]
 pub struct lua_Debug {
-  event: c_int,
-  name: *const c_char,
-  namewhat: *const c_char,
-  what: *const c_char,
-  source: *const c_char,
-  currentline: c_int,
-  linedefined: c_int,
-  lastlinedefined: c_int,
-  nups: c_uchar,
-  nparams: c_uchar,
-  isvararg: c_char,
-  istailcall: c_char,
-  short_src: [c_char, ..luaconf::LUA_IDSIZE as uint],
+  pub event: c_int,
+  pub name: *const c_char,
+  pub namewhat: *const c_char,
+  pub what: *const c_char,
+  pub source: *const c_char,
+  pub currentline: c_int,
+  pub linedefined: c_int,
+  pub lastlinedefined: c_int,
+  pub nups: c_uchar,
+  pub nparams: c_uchar,
+  pub isvararg: c_char,
+  pub istailcall: c_char,
+  pub short_src: [c_char, ..luaconf::LUA_IDSIZE as uint],
+  // lua.h mentions this is for private use
   i_ci: *mut c_void,
 }

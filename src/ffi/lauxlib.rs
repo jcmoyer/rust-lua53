@@ -213,11 +213,11 @@ pub unsafe fn luaL_loadbuffer(L: *mut lua_State, s: *const c_char, sz: size_t, n
 
 #[repr(C)]
 pub struct luaL_Buffer {
-  b: *mut c_char,
-  size: size_t,
-  n: size_t,
-  L: *mut lua_State,
-  initb: [c_char, ..LUAL_BUFFERSIZE as uint]
+  pub b: *mut c_char,
+  pub size: size_t,
+  pub n: size_t,
+  pub L: *mut lua_State,
+  pub initb: [c_char, ..LUAL_BUFFERSIZE as uint]
 }
 
 // TODO: Test this thoroughly
@@ -255,8 +255,8 @@ pub unsafe fn luaL_prepbuffer(B: *mut luaL_Buffer) -> *mut c_char {
 
 #[repr(C)]
 pub struct luaL_Stream {
-  f: *mut ::libc::FILE,
-  closef: lua_CFunction
+  pub f: *mut ::libc::FILE,
+  pub closef: lua_CFunction
 }
 
 // omitted: old module system compatibility
