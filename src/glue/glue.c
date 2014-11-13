@@ -166,14 +166,14 @@ int write_items_(FILE* f, const rs_item items[], size_t num) {
 int main(int argc, const char** argv) {
   if (argc <= 1) {
     printf("usage: %s <filename>\n", argv[0]);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   FILE* f = fopen(argv[1], "w");
 
   if (!f) {
     printf("could not open file: errno = %d\n", errno);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   const rs_item glue_entries[] = {
@@ -242,10 +242,10 @@ int main(int argc, const char** argv) {
 
   if (!write_items(f, glue_entries)) {
     printf("%s: error generating glue.rs; aborting\n", argv[0]);
-    return 1;
+    return EXIT_FAILURE;
   }
 
   fclose(f);
 
-  return 0;
+  return EXIT_SUCCESS;
 }
