@@ -26,6 +26,7 @@
 
 #include <lua.h>
 #include <lauxlib.h>
+#include <lualib.h>
 
 // Macros taken from https://gcc.gnu.org/onlinedocs/cpp/Stringification.html
 #define xstr(s) str(s)
@@ -158,6 +159,18 @@ int main(int argc, const char** argv) {
   fprintf(f, "/* lauxlib.h */\n");
   fprintf(f, "pub const LUAL_NUMSIZES: c_int = %d;\n", LUAL_NUMSIZES);
   write_str_const(f, "LUA_FILEHANDLE", LUA_FILEHANDLE);
+
+  fprintf(f, "/* lualib.h */\n");
+  write_str_const(f, "LUA_COLIBNAME", LUA_COLIBNAME);
+  write_str_const(f, "LUA_TABLIBNAME", LUA_TABLIBNAME);
+  write_str_const(f, "LUA_IOLIBNAME", LUA_IOLIBNAME);
+  write_str_const(f, "LUA_OSLIBNAME", LUA_OSLIBNAME);
+  write_str_const(f, "LUA_STRLIBNAME", LUA_STRLIBNAME);
+  write_str_const(f, "LUA_UTF8LIBNAME", LUA_UTF8LIBNAME);
+  write_str_const(f, "LUA_BITLIBNAME", LUA_BITLIBNAME);
+  write_str_const(f, "LUA_MATHLIBNAME", LUA_MATHLIBNAME);
+  write_str_const(f, "LUA_DBLIBNAME", LUA_DBLIBNAME);
+  write_str_const(f, "LUA_LOADLIBNAME", LUA_LOADLIBNAME);
 
   fclose(f);
 

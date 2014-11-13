@@ -24,6 +24,11 @@
 use ffi::lua::lua_State;
 use libc::c_int;
 
+pub use super::glue::{
+  LUA_COLIBNAME, LUA_TABLIBNAME, LUA_IOLIBNAME, LUA_OSLIBNAME, LUA_STRLIBNAME,
+  LUA_UTF8LIBNAME, LUA_BITLIBNAME, LUA_MATHLIBNAME, LUA_DBLIBNAME, LUA_LOADLIBNAME
+};
+
 extern {
   pub fn luaopen_base(L: *mut lua_State) -> c_int;
   pub fn luaopen_coroutine(L: *mut lua_State) -> c_int;
