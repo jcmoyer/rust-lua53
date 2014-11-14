@@ -237,6 +237,18 @@ pub use self::lauxlib::{
 
 // lualib.h functions
 pub use self::lualib::{
+  luaopen_base,
+  luaopen_coroutine,
+  luaopen_table,
+  luaopen_io,
+  luaopen_os,
+  luaopen_string,
+  luaopen_utf8,
+  luaopen_bit32,
+  luaopen_math,
+  luaopen_debug,
+  luaopen_package,
+
   luaL_openlibs
 };
 
