@@ -74,37 +74,34 @@ const char* rs_uint_type(int width) {
   }
 }
 
-// converts \ in a string to \\ so that it can be used as a rust string literal
-size_t escape(const char* in, char* out, size_t szout) {
-  const char* pi = in;
-  char* po = out;
-  int inlen = strlen(in);
-  size_t written = 0;
+int try_write(char** str, char c, size_t n, size_t* written, size_t szstr) {
+  if (szstr - *written < n) {
+    return 0;
+  }
+  for (; n; n--, *written++) *(*str)++ = c;
+  return 1;
+}
 
-  for (pi = in; pi < in + inlen; pi++) {
-    switch (*pi) {
+// converts \ in a string to \\ so that it can be used as a rust string literal
+// ensures that `out` will always have a null terminating character
+size_t escape(const char* in, char* out, size_t szout) {
+  size_t written = 0;
+  char cur;
+
+  while (cur = *in++) {
+    switch (cur) {
       case '\\':
-        if (written + 2 <= szout) {
-          *po++ = *pi;
-          *po++ = *pi;
-          written += 2;
-        } else {
-          return written;
-        }
+        if (!try_write(&out, cur, 2, &written, szout)) goto finalize;
         break;
       default:
-        if (written + 1 <= szout) {
-          *po++ = *pi;
-          written++;
-        } else {
-          return written;
-        }
+        if (!try_write(&out, cur, 1, &written, szout)) goto finalize;
         break;
     }
   }
 
+finalize:
   if (written + 1 <= szout) {
-    *po++ = '\0';
+    *out++ = '\0';
     written++;
   }
   return written;
