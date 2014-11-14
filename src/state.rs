@@ -573,8 +573,9 @@ impl<'lua> State<'lua> {
   /// Convenience function that uses type information to call `new_userdata`
   /// and perform a cast.
   ///
-  /// Example:
-  /// ```rust
+  /// # Example
+  ///
+  /// ```
   /// *state.new_userdata_typed() = MyStruct::new(...);
   /// state.set_metatable_from_registry(-1, "MyStruct");
   /// ```
