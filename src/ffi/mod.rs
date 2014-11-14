@@ -23,226 +23,252 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-pub use self::lua::lua_Alloc;
-pub use self::lua::lua_CFunction;
-pub use self::lua::lua_Ctx;
-pub use self::lua::lua_Debug;
-pub use self::lua::lua_Hook;
-pub use self::lua::lua_Integer;
-pub use self::lua::lua_KFunction;
-pub use self::lua::lua_Number;
-pub use self::lua::lua_Reader;
-pub use self::lua::lua_State;
-pub use self::lua::lua_Unsigned;
-pub use self::lua::lua_Writer;
+// This is more or less in the order it appears in the Lua manual, with the
+// exception of constants, which appear scattered throughout the manual text.
 
-pub use self::lua::lua_absindex;
-pub use self::lua::lua_arith;
-pub use self::lua::lua_atpanic;
-pub use self::lua::lua_call;
-pub use self::lua::lua_callk;
-pub use self::lua::lua_checkstack;
-pub use self::lua::lua_close;
-pub use self::lua::lua_compare;
-pub use self::lua::lua_concat;
-pub use self::lua::lua_copy;
-pub use self::lua::lua_createtable;
-pub use self::lua::lua_dump;
-pub use self::lua::lua_error;
-pub use self::lua::lua_gc;
-pub use self::lua::lua_getallocf;
-pub use self::lua::lua_getextraspace;
-pub use self::lua::lua_getfield;
-pub use self::lua::lua_getglobal;
-pub use self::lua::lua_gethook;
-pub use self::lua::lua_gethookcount;
-pub use self::lua::lua_gethookmask;
-pub use self::lua::lua_getinfo;
-pub use self::lua::lua_getlocal;
-pub use self::lua::lua_getmetatable;
-pub use self::lua::lua_getstack;
-pub use self::lua::lua_gettable;
-pub use self::lua::lua_gettop;
-pub use self::lua::lua_getupvalue;
-pub use self::lua::lua_getuservalue;
-pub use self::lua::lua_insert;
-pub use self::lua::lua_isboolean;
-pub use self::lua::lua_iscfunction;
-pub use self::lua::lua_isfunction;
-pub use self::lua::lua_isinteger;
-pub use self::lua::lua_islightuserdata;
-pub use self::lua::lua_isnil;
-pub use self::lua::lua_isnone;
-pub use self::lua::lua_isnoneornil;
-pub use self::lua::lua_isnumber;
-pub use self::lua::lua_isstring;
-pub use self::lua::lua_istable;
-pub use self::lua::lua_isthread;
-pub use self::lua::lua_isuserdata;
-pub use self::lua::lua_isyieldable;
-pub use self::lua::lua_len;
-pub use self::lua::lua_load;
-pub use self::lua::lua_newstate;
-pub use self::lua::lua_newtable;
-pub use self::lua::lua_newthread;
-pub use self::lua::lua_newuserdata;
-pub use self::lua::lua_next;
+// luaconf.h functions
 pub use self::luaconf::lua_numtointeger;
-pub use self::lua::lua_pcall;
-pub use self::lua::lua_pcallk;
-pub use self::lua::lua_pop;
-pub use self::lua::lua_pushboolean;
-pub use self::lua::lua_pushcclosure;
-pub use self::lua::lua_pushcfunction;
-pub use self::lua::lua_pushfstring;
-pub use self::lua::lua_pushglobaltable;
-pub use self::lua::lua_pushinteger;
-pub use self::lua::lua_pushlightuserdata;
-pub use self::lua::lua_pushliteral;
-pub use self::lua::lua_pushlstring;
-pub use self::lua::lua_pushnil;
-pub use self::lua::lua_pushnumber;
-pub use self::lua::lua_pushstring;
-pub use self::lua::lua_pushthread;
-pub use self::lua::lua_pushvalue;
-//pub use self::lua::lua_pushvfstring; -- not implemented
-pub use self::lua::lua_rawequal;
-pub use self::lua::lua_rawget;
-pub use self::lua::lua_rawgeti;
-pub use self::lua::lua_rawgetp;
-pub use self::lua::lua_rawlen;
-pub use self::lua::lua_rawset;
-pub use self::lua::lua_rawseti;
-pub use self::lua::lua_rawsetp;
-pub use self::lua::lua_register;
-pub use self::lua::lua_remove;
-pub use self::lua::lua_replace;
-pub use self::lua::lua_resume;
-pub use self::lua::lua_rotate;
-pub use self::lua::lua_setallocf;
-pub use self::lua::lua_setfield;
-pub use self::lua::lua_setglobal;
-pub use self::lua::lua_sethook;
-pub use self::lua::lua_setlocal;
-pub use self::lua::lua_setmetatable;
-pub use self::lua::lua_settable;
-pub use self::lua::lua_settop;
-pub use self::lua::lua_setupvalue;
-pub use self::lua::lua_setuservalue;
-pub use self::lua::lua_status;
-pub use self::lua::lua_strtonum;
-pub use self::lua::lua_toboolean;
-pub use self::lua::lua_tocfunction;
-pub use self::lua::lua_tointeger;
-pub use self::lua::lua_tointegerx;
-pub use self::lua::lua_tolstring;
-pub use self::lua::lua_tonumber;
-pub use self::lua::lua_tonumberx;
-pub use self::lua::lua_topointer;
-pub use self::lua::lua_tostring;
-pub use self::lua::lua_tothread;
-pub use self::lua::lua_touserdata;
-pub use self::lua::lua_type;
-pub use self::lua::lua_typename;
-pub use self::lua::lua_upvalueid;
-pub use self::lua::lua_upvalueindex;
-pub use self::lua::lua_upvaluejoin;
-pub use self::lua::lua_version;
-pub use self::lua::lua_xmove;
-pub use self::lua::lua_yield;
-pub use self::lua::lua_yieldk;
 
-pub use self::lauxlib::luaL_Buffer;
-pub use self::lauxlib::luaL_Reg;
-pub use self::lauxlib::luaL_Stream;
+// C API types
+pub use self::lua::{
+  lua_Alloc,
+  lua_CFunction,
+  lua_Ctx,
+  lua_Debug,
+  lua_Hook,
+  lua_Integer,
+  lua_KFunction,
+  lua_Number,
+  lua_Reader,
+  lua_State,
+  lua_Unsigned,
+  lua_Writer
+};
 
-pub use self::lauxlib::luaL_addchar;
-pub use self::lauxlib::luaL_addlstring;
-pub use self::lauxlib::luaL_addsize;
-pub use self::lauxlib::luaL_addstring;
-pub use self::lauxlib::luaL_addvalue;
-pub use self::lauxlib::luaL_argcheck;
-pub use self::lauxlib::luaL_argerror;
-pub use self::lauxlib::luaL_buffinit;
-pub use self::lauxlib::luaL_buffinitsize;
-pub use self::lauxlib::luaL_callmeta;
-pub use self::lauxlib::luaL_checkany;
-pub use self::lauxlib::luaL_checkint;
-pub use self::lauxlib::luaL_checkinteger;
-pub use self::lauxlib::luaL_checklong;
-pub use self::lauxlib::luaL_checklstring;
-pub use self::lauxlib::luaL_checknumber;
-pub use self::lauxlib::luaL_checkoption;
-pub use self::lauxlib::luaL_checkstack;
-pub use self::lauxlib::luaL_checkstring;
-pub use self::lauxlib::luaL_checktype;
-pub use self::lauxlib::luaL_checkudata;
-pub use self::lauxlib::luaL_checkversion;
-pub use self::lauxlib::luaL_dofile;
-pub use self::lauxlib::luaL_dostring;
-pub use self::lauxlib::luaL_error;
-pub use self::lauxlib::luaL_execresult;
-pub use self::lauxlib::luaL_fileresult;
-pub use self::lauxlib::luaL_getmetafield;
-pub use self::lauxlib::luaL_getmetatable;
-pub use self::lauxlib::luaL_getsubtable;
-pub use self::lauxlib::luaL_gsub;
-pub use self::lauxlib::luaL_len;
-pub use self::lauxlib::luaL_loadbuffer;
-pub use self::lauxlib::luaL_loadbufferx;
-pub use self::lauxlib::luaL_loadfile;
-pub use self::lauxlib::luaL_loadfilex;
-pub use self::lauxlib::luaL_loadstring;
-pub use self::lauxlib::luaL_newlib;
-pub use self::lauxlib::luaL_newlibtable;
-pub use self::lauxlib::luaL_newmetatable;
-pub use self::lauxlib::luaL_newstate;
-pub use self::lualib::luaL_openlibs;
-pub use self::lauxlib::luaL_optint;
-pub use self::lauxlib::luaL_optinteger;
-pub use self::lauxlib::luaL_optlong;
-pub use self::lauxlib::luaL_optlstring;
-pub use self::lauxlib::luaL_optnumber;
-pub use self::lauxlib::luaL_optstring;
-pub use self::lauxlib::luaL_prepbuffer;
-pub use self::lauxlib::luaL_prepbuffsize;
-pub use self::lauxlib::luaL_pushresult;
-pub use self::lauxlib::luaL_pushresultsize;
-pub use self::lauxlib::luaL_ref;
-pub use self::lauxlib::luaL_requiref;
-pub use self::lauxlib::luaL_setfuncs;
-pub use self::lauxlib::luaL_setmetatable;
-pub use self::lauxlib::luaL_testudata;
-pub use self::lauxlib::luaL_tolstring;
-pub use self::lauxlib::luaL_traceback;
-pub use self::lauxlib::luaL_typename;
-pub use self::lauxlib::luaL_unref;
-pub use self::lauxlib::luaL_where;
+// C API functions
+pub use self::lua::{
+  lua_absindex,
+  lua_arith,
+  lua_atpanic,
+  lua_call,
+  lua_callk,
+  lua_checkstack,
+  lua_close,
+  lua_compare,
+  lua_concat,
+  lua_copy,
+  lua_createtable,
+  lua_dump,
+  lua_error,
+  lua_gc,
+  lua_getallocf,
+  lua_getextraspace,
+  lua_getfield,
+  lua_getglobal,
+  lua_gethook,
+  lua_gethookcount,
+  lua_gethookmask,
+  lua_getinfo,
+  lua_getlocal,
+  lua_getmetatable,
+  lua_getstack,
+  lua_gettable,
+  lua_gettop,
+  lua_getupvalue,
+  lua_getuservalue,
+  lua_insert,
+  lua_isboolean,
+  lua_iscfunction,
+  lua_isfunction,
+  lua_isinteger,
+  lua_islightuserdata,
+  lua_isnil,
+  lua_isnone,
+  lua_isnoneornil,
+  lua_isnumber,
+  lua_isstring,
+  lua_istable,
+  lua_isthread,
+  lua_isuserdata,
+  lua_isyieldable,
+  lua_len,
+  lua_load,
+  lua_newstate,
+  lua_newtable,
+  lua_newthread,
+  lua_newuserdata,
+  lua_next,
+  lua_pcall,
+  lua_pcallk,
+  lua_pop,
+  lua_pushboolean,
+  lua_pushcclosure,
+  lua_pushcfunction,
+  lua_pushfstring,
+  lua_pushglobaltable,
+  lua_pushinteger,
+  lua_pushlightuserdata,
+  lua_pushliteral,
+  lua_pushlstring,
+  lua_pushnil,
+  lua_pushnumber,
+  lua_pushstring,
+  lua_pushthread,
+  lua_pushvalue,
+  // omitted: lua_pushvfstring
+  lua_rawequal,
+  lua_rawget,
+  lua_rawgeti,
+  lua_rawgetp,
+  lua_rawlen,
+  lua_rawset,
+  lua_rawseti,
+  lua_rawsetp,
+  lua_register,
+  lua_remove,
+  lua_replace,
+  lua_resume,
+  lua_rotate,
+  lua_setallocf,
+  lua_setfield,
+  lua_setglobal,
+  lua_sethook,
+  lua_setlocal,
+  lua_setmetatable,
+  lua_settable,
+  lua_settop,
+  lua_setupvalue,
+  lua_setuservalue,
+  lua_status,
+  lua_strtonum,
+  lua_toboolean,
+  lua_tocfunction,
+  lua_tointeger,
+  lua_tointegerx,
+  lua_tolstring,
+  lua_tonumber,
+  lua_tonumberx,
+  lua_topointer,
+  lua_tostring,
+  lua_tothread,
+  lua_touserdata,
+  lua_type,
+  lua_typename,
+  lua_upvalueid,
+  lua_upvalueindex,
+  lua_upvaluejoin,
+  lua_version,
+  lua_xmove,
+  lua_yield,
+  lua_yieldk
+};
 
-// commonly used constants from lua.h
-pub use self::lua::LUA_MULTRET;
-pub use self::lua::LUA_REGISTRYINDEX;
+// auxiliary library types
+pub use self::lauxlib::{
+  luaL_Buffer,
+  luaL_Reg,
+  luaL_Stream
+};
 
-pub use self::lua::{LUA_RIDX_MAINTHREAD, LUA_RIDX_GLOBALS};
+// auxiliary library functions
+pub use self::lauxlib::{
+  luaL_addchar,
+  luaL_addlstring,
+  luaL_addsize,
+  luaL_addstring,
+  luaL_addvalue,
+  luaL_argcheck,
+  luaL_argerror,
+  luaL_buffinit,
+  luaL_buffinitsize,
+  luaL_callmeta,
+  luaL_checkany,
+  luaL_checkint,
+  luaL_checkinteger,
+  luaL_checklong,
+  luaL_checklstring,
+  luaL_checknumber,
+  luaL_checkoption,
+  luaL_checkstack,
+  luaL_checkstring,
+  luaL_checktype,
+  luaL_checkudata,
+  luaL_checkversion,
+  luaL_dofile,
+  luaL_dostring,
+  luaL_error,
+  luaL_execresult,
+  luaL_fileresult,
+  luaL_getmetafield,
+  luaL_getmetatable,
+  luaL_getsubtable,
+  luaL_gsub,
+  luaL_len,
+  luaL_loadbuffer,
+  luaL_loadbufferx,
+  luaL_loadfile,
+  luaL_loadfilex,
+  luaL_loadstring,
+  luaL_newlib,
+  luaL_newlibtable,
+  luaL_newmetatable,
+  luaL_newstate,
+  luaL_optint,
+  luaL_optinteger,
+  luaL_optlong,
+  luaL_optlstring,
+  luaL_optnumber,
+  luaL_optstring,
+  luaL_prepbuffer,
+  luaL_prepbuffsize,
+  luaL_pushresult,
+  luaL_pushresultsize,
+  luaL_ref,
+  luaL_requiref,
+  luaL_setfuncs,
+  luaL_setmetatable,
+  luaL_testudata,
+  luaL_tolstring,
+  luaL_traceback,
+  luaL_typename,
+  luaL_unref,
+  luaL_where
+};
 
-pub use self::lua::{LUA_OPADD, LUA_OPSUB, LUA_OPMUL, LUA_OPDIV, LUA_OPIDIV};
-pub use self::lua::{LUA_OPMOD, LUA_OPPOW, LUA_OPUNM};
-pub use self::lua::{LUA_OPBNOT, LUA_OPBAND, LUA_OPBOR, LUA_OPBXOR, LUA_OPSHL, LUA_OPSHR};
-pub use self::lua::{LUA_OPEQ, LUA_OPLT, LUA_OPLE};
+// lualib.h functions
+pub use self::lualib::{
+  luaL_openlibs
+};
 
-pub use self::lua::{LUA_OK, LUA_ERRRUN, LUA_ERRMEM, LUA_ERRERR, LUA_ERRGCMM};
+// constants from lua.h
+pub use self::lua::{
+  LUA_MULTRET,
+  LUA_REGISTRYINDEX,
 
-pub use self::lua::{LUA_TNONE, LUA_TNIL, LUA_TNUMBER, LUA_TBOOLEAN, LUA_TSTRING};
-pub use self::lua::{LUA_TTABLE, LUA_TFUNCTION, LUA_TUSERDATA, LUA_TTHREAD, LUA_TLIGHTUSERDATA};
+  LUA_RIDX_MAINTHREAD, LUA_RIDX_GLOBALS,
 
-pub use self::lua::{LUA_HOOKCALL, LUA_HOOKRET, LUA_HOOKTAILCALL, LUA_HOOKLINE, LUA_HOOKCOUNT};
+  LUA_OPADD, LUA_OPSUB, LUA_OPMUL, LUA_OPDIV, LUA_OPIDIV,
+  LUA_OPMOD, LUA_OPPOW, LUA_OPUNM,
+  LUA_OPBNOT, LUA_OPBAND, LUA_OPBOR, LUA_OPBXOR, LUA_OPSHL, LUA_OPSHR,
+  LUA_OPEQ, LUA_OPLT, LUA_OPLE,
 
-pub use self::lua::{LUA_GCSTOP, LUA_GCRESTART, LUA_GCCOLLECT, LUA_GCCOUNT, LUA_GCCOUNTB};
-pub use self::lua::{LUA_GCSTEP, LUA_GCSETPAUSE, LUA_GCSETSTEPMUL, LUA_GCISRUNNING};
+  LUA_OK, LUA_ERRRUN, LUA_ERRMEM, LUA_ERRERR, LUA_ERRGCMM,
+
+  LUA_TNONE, LUA_TNIL, LUA_TNUMBER, LUA_TBOOLEAN, LUA_TSTRING, LUA_TTABLE,
+  LUA_TFUNCTION, LUA_TUSERDATA, LUA_TTHREAD, LUA_TLIGHTUSERDATA,
+
+  LUA_HOOKCALL, LUA_HOOKRET, LUA_HOOKTAILCALL, LUA_HOOKLINE, LUA_HOOKCOUNT,
+
+  LUA_GCSTOP, LUA_GCRESTART, LUA_GCCOLLECT, LUA_GCCOUNT, LUA_GCCOUNTB,
+  LUA_GCSTEP, LUA_GCSETPAUSE, LUA_GCSETSTEPMUL, LUA_GCISRUNNING
+};
 
 // constants from lauxlib.h
-pub use self::lauxlib::{LUA_REFNIL, LUA_NOREF};
-pub use self::lauxlib::{LUA_ERRFILE, LUA_FILEHANDLE};
+pub use self::lauxlib::{
+  LUA_REFNIL, LUA_NOREF,
+  LUA_ERRFILE,
+  LUA_FILEHANDLE
+};
 
 // constants from lualib.h
 pub use self::lualib::{
