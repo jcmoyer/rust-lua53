@@ -169,7 +169,9 @@ int main(int argc, const char** argv) {
     return EXIT_FAILURE;
   }
 
-  FILE* f = fopen(argv[1], "w");
+  const char* filename = argv[1];
+
+  FILE* f = fopen(filename, "w");
 
   if (!f) {
     printf("could not open file: errno = %d\n", errno);
@@ -241,7 +243,7 @@ int main(int argc, const char** argv) {
   };
 
   if (!write_items(f, glue_entries)) {
-    printf("%s: error generating glue.rs; aborting\n", argv[0]);
+    printf("%s: error generating %s; aborting\n", argv[0], filename);
     return EXIT_FAILURE;
   }
 
