@@ -88,17 +88,17 @@ pub type lua_Unsigned = luaconf::LUA_UNSIGNED;
 pub type lua_Ctx = luaconf::LUA_CTXT;
 
 // Type for C functions registered with Lua
-pub type lua_CFunction = Option<fn(L: *mut lua_State) -> c_int>;
+pub type lua_CFunction = Option<extern "C" fn(L: *mut lua_State) -> c_int>;
 
 // Type for continuation functions
-pub type lua_KFunction = Option<fn(L: *mut lua_State, status: c_int, ctx: lua_Ctx) -> c_int>;
+pub type lua_KFunction = Option<extern "C" fn(L: *mut lua_State, status: c_int, ctx: lua_Ctx) -> c_int>;
 
 // Type for functions that read/write blocks when loading/dumping Lua chunks
-pub type lua_Reader = Option<fn(L: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char>;
-pub type lua_Writer = Option<fn(L: *mut lua_State, p: *const c_void, sz: size_t, ud: *mut c_void) -> c_int>;
+pub type lua_Reader = Option<extern "C" fn(L: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char>;
+pub type lua_Writer = Option<extern "C" fn(L: *mut lua_State, p: *const c_void, sz: size_t, ud: *mut c_void) -> c_int>;
 
 // Type for memory-allocation functions
-pub type lua_Alloc = Option<fn(ud: *mut c_void, ptr: *mut c_void, osize: size_t, nsize: size_t) -> *mut c_void>;
+pub type lua_Alloc = Option<extern "C" fn(ud: *mut c_void, ptr: *mut c_void, osize: size_t, nsize: size_t) -> *mut c_void>;
 
 extern {
   // state manipulation
@@ -396,7 +396,7 @@ pub const LUA_MASKLINE: c_int = 1 << (LUA_HOOKLINE as uint);
 pub const LUA_MASKCOUNT: c_int = 1 << (LUA_HOOKCOUNT as uint);
 
 // Functions to be called by the debugger in specific events
-pub type lua_Hook = Option<fn(L: *mut lua_State, ar: *mut lua_Debug)>;
+pub type lua_Hook = Option<extern "C" fn(L: *mut lua_State, ar: *mut lua_Debug)>;
 
 extern {
   pub fn lua_getstack(L: *mut lua_State, level: c_int, ar: *mut lua_Debug) -> c_int;
