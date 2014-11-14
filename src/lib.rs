@@ -20,9 +20,56 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#![feature(unsafe_destructor)]
+
 extern crate libc;
+
+pub use state::{
+  State,
+
+  Number,
+  Integer,
+  Function,
+  Continuation,
+  Reader,
+  Writer,
+  Context,
+  Allocator,
+  Hook,
+  Index,
+
+  Arithmetic,
+  LuaAdd, LuaSub, LuaMul, LuaMod, LuaPow, LuaDiv, LuaIDiv,
+  LuaBAnd, LuaBOr, LuaBXor, LuaShl, LuaShr, LuaUnm, LuaBNot,
+
+  Comparison,
+  LuaEq, LuaLt, LuaLe,
+
+  ThreadStatus,
+  LuaOk, LuaYield, LuaRuntimeError, LuaSyntaxError, LuaMemoryError,
+  LuaGcError, LuaMessageHandlerError, LuaFileError,
+
+  GcOption,
+  GcStop, GcRestart, GcCollect, GcCount, GcCountBytes, GcStep, GcSetPause,
+  GcSetStepMul, GcIsRunning,
+
+  Type,
+  LuaNone, LuaNil, LuaBoolean, LuaLightUserdata, LuaNumber, LuaString,
+  LuaTable, LuaFunction, LuaUserdata, LuaThread,
+
+  Reference,
+  REFNIL, NOREF,
+
+  HookMask,
+  MASKCALL, MASKRET, MASKLINE, MASKCOUNT,
+
+  MULTRET, REGISTRYINDEX,
+  RIDX_MAINTHREAD, RIDX_GLOBALS
+};
 
 #[link(name="lua53")]
 extern {}
 
 pub mod ffi;
+mod state;
+
