@@ -54,7 +54,7 @@ pub type Function = ffi::lua_CFunction;
 pub type Continuation = ffi::lua_KFunction;
 pub type Reader = ffi::lua_Reader;
 pub type Writer = ffi::lua_Writer;
-pub type Context = ffi::lua_Ctx;
+pub type Context = ffi::lua_KContext;
 pub type Allocator = ffi::lua_Alloc;
 pub type Hook = ffi::lua_Hook;
 
@@ -540,6 +540,14 @@ impl<'lua> State<'lua> {
     Type::from_c_int(ty).unwrap()
   }
 
+  /// Maps to `lua_geti`.
+  pub fn geti(&mut self, index: Index, i: Integer) -> Type {
+    let ty = unsafe {
+      ffi::lua_geti(self.L, index, i)
+    };
+    Type::from_c_int(ty).unwrap()
+  }
+
   /// Maps to `lua_rawget`.
   pub fn raw_get(&mut self, index: Index) -> Type {
     let ty = unsafe { ffi::lua_rawget(self.L, index) };
@@ -611,6 +619,11 @@ impl<'lua> State<'lua> {
   /// Maps to `lua_setfield`.
   pub fn set_field(&mut self, idx: Index, k: &str) {
     unsafe { k.with_c_str(|c_str| ffi::lua_setfield(self.L, idx, c_str)) }
+  }
+
+  /// Maps to `lua_seti`.
+  pub fn seti(&mut self, idx: Index, n: Integer) {
+    unsafe { ffi::lua_seti(self.L, idx, n) }
   }
 
   /// Maps to `lua_rawset`.
@@ -753,9 +766,9 @@ impl<'lua> State<'lua> {
     unsafe { ffi::lua_len(self.L, idx) }
   }
 
-  /// Maps to `lua_strtonum`.
-  pub fn str_to_num(&mut self, s: &str) -> size_t {
-    unsafe { s.with_c_str(|c_str| ffi::lua_strtonum(self.L, c_str)) }
+  /// Maps to `lua_stringtonumber`.
+  pub fn string_to_number(&mut self, s: &str) -> size_t {
+    unsafe { s.with_c_str(|c_str| ffi::lua_stringtonumber(self.L, c_str)) }
   }
 
   /// Maps to `lua_getallocf`.

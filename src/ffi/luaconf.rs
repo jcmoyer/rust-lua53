@@ -33,7 +33,7 @@ pub use super::glue::LUAI_MAXSTACK;
 pub use super::glue::LUAL_NUMSIZES;
 pub use super::glue::LUAI_FIRSTPSEUDOIDX;
 
-pub use super::glue::LUA_CTXT;
+pub use super::glue::LUA_KCONTEXT;
 
 use super::lua::{lua_Number, lua_Integer};
 use libc::c_int;

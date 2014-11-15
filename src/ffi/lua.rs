@@ -85,13 +85,13 @@ pub type lua_Integer = luaconf::LUA_INTEGER;
 pub type lua_Unsigned = luaconf::LUA_UNSIGNED;
 
 // type for continuation-function contexts
-pub type lua_Ctx = luaconf::LUA_CTXT;
+pub type lua_KContext = luaconf::LUA_KCONTEXT;
 
 // Type for C functions registered with Lua
 pub type lua_CFunction = Option<extern "C" fn(L: *mut lua_State) -> c_int>;
 
 // Type for continuation functions
-pub type lua_KFunction = Option<extern "C" fn(L: *mut lua_State, status: c_int, ctx: lua_Ctx) -> c_int>;
+pub type lua_KFunction = Option<extern "C" fn(L: *mut lua_State, status: c_int, ctx: lua_KContext) -> c_int>;
 
 // Type for functions that read/write blocks when loading/dumping Lua chunks
 pub type lua_Reader = Option<extern "C" fn(L: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char>;
@@ -191,6 +191,7 @@ extern {
   pub fn lua_getglobal(L: *mut lua_State, var: *const c_char) -> c_int;
   pub fn lua_gettable(L: *mut lua_State, idx: c_int) -> c_int;
   pub fn lua_getfield(L: *mut lua_State, idx: c_int, k: *const c_char) -> c_int;
+  pub fn lua_geti(L: *mut lua_State, idx: c_int, n: lua_Integer) -> c_int;
   pub fn lua_rawget(L: *mut lua_State, idx: c_int) -> c_int;
   pub fn lua_rawgeti(L: *mut lua_State, idx: c_int, n: lua_Integer) -> c_int;
   pub fn lua_rawgetp(L: *mut lua_State, idx: c_int, p: *const c_void) -> c_int;
@@ -206,6 +207,7 @@ extern {
   pub fn lua_setglobal(L: *mut lua_State, var: *const c_char);
   pub fn lua_settable(L: *mut lua_State, idx: c_int);
   pub fn lua_setfield(L: *mut lua_State, idx: c_int, k: *const c_char);
+  pub fn lua_seti(L: *mut lua_State, idx: c_int, n: lua_Integer);
   pub fn lua_rawset(L: *mut lua_State, idx: c_int);
   pub fn lua_rawseti(L: *mut lua_State, idx: c_int, n: lua_Integer);
   pub fn lua_rawsetp(L: *mut lua_State, idx: c_int, p: *const c_void);
@@ -215,8 +217,8 @@ extern {
 
 // 'load' and 'call' functions (load and run Lua code)
 extern {
-  pub fn lua_callk(L: *mut lua_State, nargs: c_int, nresults: c_int, ctx: lua_Ctx, k: lua_KFunction);
-  pub fn lua_pcallk(L: *mut lua_State, nargs: c_int, nresults: c_int, errfunc: c_int, ctx: lua_Ctx, k: lua_KFunction) -> c_int;
+  pub fn lua_callk(L: *mut lua_State, nargs: c_int, nresults: c_int, ctx: lua_KContext, k: lua_KFunction);
+  pub fn lua_pcallk(L: *mut lua_State, nargs: c_int, nresults: c_int, errfunc: c_int, ctx: lua_KContext, k: lua_KFunction) -> c_int;
   pub fn lua_load(L: *mut lua_State, reader: lua_Reader, dt: *mut c_void, chunkname: *const c_char, mode: *const c_char) -> c_int;
   pub fn lua_dump(L: *mut lua_State, writer: lua_Writer, data: *mut c_void, strip: c_int) -> c_int;
 }
@@ -233,7 +235,7 @@ pub unsafe fn lua_pcall(L: *mut lua_State, n: c_int, r: c_int, f: c_int) -> c_in
 
 // coroutine functions
 extern {
-  pub fn lua_yieldk(L: *mut lua_State, nresults: c_int, ctx: lua_Ctx, k: lua_KFunction) -> c_int;
+  pub fn lua_yieldk(L: *mut lua_State, nresults: c_int, ctx: lua_KContext, k: lua_KFunction) -> c_int;
   pub fn lua_resume(L: *mut lua_State, from: *mut lua_State, narg: c_int) -> c_int;
   pub fn lua_status(L: *mut lua_State) -> c_int;
   pub fn lua_isyieldable(L: *mut lua_State) -> c_int;
@@ -265,7 +267,7 @@ extern {
   pub fn lua_next(L: *mut lua_State, idx: c_int) -> c_int;
   pub fn lua_concat(L: *mut lua_State, n: c_int);
   pub fn lua_len(L: *mut lua_State, idx: c_int);
-  pub fn lua_strtonum(L: *mut lua_State, s: *const c_char) -> size_t;
+  pub fn lua_stringtonumber(L: *mut lua_State, s: *const c_char) -> size_t;
   pub fn lua_getallocf(L: *mut lua_State, ud: *mut *mut c_void) -> lua_Alloc;
   pub fn lua_setallocf(L: *mut lua_State, f: lua_Alloc, ud: *mut c_void);
 }
