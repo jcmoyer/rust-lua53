@@ -20,6 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#![crate_name = "lua"]
+#![crate_type = "lib"]
+#![comment = "Lua 5.3 bindings for Rust"]
+#![license = "MIT"]
+
 #![feature(unsafe_destructor)]
 
 extern crate libc;
