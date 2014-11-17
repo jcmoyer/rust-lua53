@@ -1,0 +1,13 @@
+language: rust
+env:
+  - LUA_INCLUDE=lua-5.3.0-beta/src/
+install:
+  - wget http://www.lua.org/work/lua-5.3.0-beta.tar.gz
+  - tar -zxf lua-5.3.0-beta.tar.gz
+  - cd lua-5.3.0-beta
+  - make linux
+  - cd -
+  - chmod +x ./prebuild.sh
+  - ./prebuild.sh
+script:
+  - cargo build
