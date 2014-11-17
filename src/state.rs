@@ -64,54 +64,54 @@ pub type Index = c_int;
 /// Arithmetic operations for `lua_arith`.
 #[deriving(Show, PartialEq, Eq)]
 pub enum Arithmetic {
-  LuaAdd = ffi::LUA_OPADD as int,
-  LuaSub = ffi::LUA_OPSUB as int,
-  LuaMul = ffi::LUA_OPMUL as int,
-  LuaMod = ffi::LUA_OPMOD as int,
-  LuaPow = ffi::LUA_OPPOW as int,
-  LuaDiv = ffi::LUA_OPDIV as int,
-  LuaIDiv = ffi::LUA_OPIDIV as int,
-  LuaBAnd = ffi::LUA_OPBAND as int,
-  LuaBOr = ffi::LUA_OPBOR as int,
-  LuaBXor = ffi::LUA_OPBXOR as int,
-  LuaShl = ffi::LUA_OPSHL as int,
-  LuaShr = ffi::LUA_OPSHR as int,
-  LuaUnm = ffi::LUA_OPUNM as int,
-  LuaBNot = ffi::LUA_OPBNOT as int,
+  Add = ffi::LUA_OPADD as int,
+  Sub = ffi::LUA_OPSUB as int,
+  Mul = ffi::LUA_OPMUL as int,
+  Mod = ffi::LUA_OPMOD as int,
+  Pow = ffi::LUA_OPPOW as int,
+  Div = ffi::LUA_OPDIV as int,
+  IDiv = ffi::LUA_OPIDIV as int,
+  BAnd = ffi::LUA_OPBAND as int,
+  BOr = ffi::LUA_OPBOR as int,
+  BXor = ffi::LUA_OPBXOR as int,
+  Shl = ffi::LUA_OPSHL as int,
+  Shr = ffi::LUA_OPSHR as int,
+  Unm = ffi::LUA_OPUNM as int,
+  BNot = ffi::LUA_OPBNOT as int,
 }
 
 /// Comparison operations for `lua_compare`.
 #[deriving(Show, PartialEq, Eq)]
 pub enum Comparison {
-  LuaEq = ffi::LUA_OPEQ as int,
-  LuaLt = ffi::LUA_OPLT as int,
-  LuaLe = ffi::LUA_OPLE as int,
+  Eq = ffi::LUA_OPEQ as int,
+  Lt = ffi::LUA_OPLT as int,
+  Le = ffi::LUA_OPLE as int,
 }
 
 /// Status of a Lua state.
 #[deriving(Show, PartialEq, Eq)]
 pub enum ThreadStatus {
-  LuaOk = ffi::LUA_OK as int,
-  LuaYield = ffi::LUA_YIELD as int,
-  LuaRuntimeError = ffi::LUA_ERRRUN as int,
-  LuaSyntaxError = ffi::LUA_ERRSYNTAX as int,
-  LuaMemoryError = ffi::LUA_ERRMEM as int,
-  LuaGcError = ffi::LUA_ERRGCMM as int,
-  LuaMessageHandlerError = ffi::LUA_ERRERR as int,
-  LuaFileError = ffi::LUA_ERRFILE as int,
+  Ok = ffi::LUA_OK as int,
+  Yield = ffi::LUA_YIELD as int,
+  RuntimeError = ffi::LUA_ERRRUN as int,
+  SyntaxError = ffi::LUA_ERRSYNTAX as int,
+  MemoryError = ffi::LUA_ERRMEM as int,
+  GcError = ffi::LUA_ERRGCMM as int,
+  MessageHandlerError = ffi::LUA_ERRERR as int,
+  FileError = ffi::LUA_ERRFILE as int,
 }
 
 impl ThreadStatus {
   fn from_c_int(i: c_int) -> Option<ThreadStatus> {
     match i {
-      ffi::LUA_OK => Some(LuaOk),
-      ffi::LUA_YIELD => Some(LuaYield),
-      ffi::LUA_ERRRUN => Some(LuaRuntimeError),
-      ffi::LUA_ERRSYNTAX => Some(LuaSyntaxError),
-      ffi::LUA_ERRMEM => Some(LuaMemoryError),
-      ffi::LUA_ERRGCMM => Some(LuaGcError),
-      ffi::LUA_ERRERR => Some(LuaMessageHandlerError),
-      ffi::LUA_ERRFILE => Some(LuaFileError),
+      ffi::LUA_OK => Some(ThreadStatus::Ok),
+      ffi::LUA_YIELD => Some(ThreadStatus::Yield),
+      ffi::LUA_ERRRUN => Some(ThreadStatus::RuntimeError),
+      ffi::LUA_ERRSYNTAX => Some(ThreadStatus::SyntaxError),
+      ffi::LUA_ERRMEM => Some(ThreadStatus::MemoryError),
+      ffi::LUA_ERRGCMM => Some(ThreadStatus::GcError),
+      ffi::LUA_ERRERR => Some(ThreadStatus::MessageHandlerError),
+      ffi::LUA_ERRFILE => Some(ThreadStatus::FileError),
       _ => None
     }
   }
@@ -120,44 +120,44 @@ impl ThreadStatus {
 /// Options for the Lua garbage collector.
 #[deriving(Show, PartialEq, Eq)]
 pub enum GcOption {
-  GcStop = ffi::LUA_GCSTOP as int,
-  GcRestart = ffi::LUA_GCRESTART as int,
-  GcCollect = ffi::LUA_GCCOLLECT as int,
-  GcCount = ffi::LUA_GCCOUNT as int,
-  GcCountBytes = ffi::LUA_GCCOUNTB as int,
-  GcStep = ffi::LUA_GCSTEP as int,
-  GcSetPause = ffi::LUA_GCSETPAUSE as int,
-  GcSetStepMul = ffi::LUA_GCSETSTEPMUL as int,
-  GcIsRunning = ffi::LUA_GCISRUNNING as int,
+  Stop = ffi::LUA_GCSTOP as int,
+  Restart = ffi::LUA_GCRESTART as int,
+  Collect = ffi::LUA_GCCOLLECT as int,
+  Count = ffi::LUA_GCCOUNT as int,
+  CountBytes = ffi::LUA_GCCOUNTB as int,
+  Step = ffi::LUA_GCSTEP as int,
+  SetPause = ffi::LUA_GCSETPAUSE as int,
+  SetStepMul = ffi::LUA_GCSETSTEPMUL as int,
+  IsRunning = ffi::LUA_GCISRUNNING as int,
 }
 
 /// Represents all possible Lua data types.
 #[deriving(Show, PartialEq, Eq)]
 pub enum Type {
-  LuaNone = ffi::LUA_TNONE as int,
-  LuaNil = ffi::LUA_TNIL as int,
-  LuaBoolean = ffi::LUA_TBOOLEAN as int,
-  LuaLightUserdata = ffi::LUA_TLIGHTUSERDATA as int,
-  LuaNumber = ffi::LUA_TNUMBER as int,
-  LuaString = ffi::LUA_TSTRING as int,
-  LuaTable = ffi::LUA_TTABLE as int,
-  LuaFunction = ffi::LUA_TFUNCTION as int,
-  LuaUserdata = ffi::LUA_TUSERDATA as int,
-  LuaThread = ffi::LUA_TTHREAD as int,
+  None = ffi::LUA_TNONE as int,
+  Nil = ffi::LUA_TNIL as int,
+  Boolean = ffi::LUA_TBOOLEAN as int,
+  LightUserdata = ffi::LUA_TLIGHTUSERDATA as int,
+  Number = ffi::LUA_TNUMBER as int,
+  String = ffi::LUA_TSTRING as int,
+  Table = ffi::LUA_TTABLE as int,
+  Function = ffi::LUA_TFUNCTION as int,
+  Userdata = ffi::LUA_TUSERDATA as int,
+  Thread = ffi::LUA_TTHREAD as int,
 }
 
 impl Type {
   fn from_c_int(i: c_int) -> Option<Type> {
     match i {
-      ffi::LUA_TNIL => Some(LuaNil),
-      ffi::LUA_TBOOLEAN => Some(LuaBoolean),
-      ffi::LUA_TLIGHTUSERDATA => Some(LuaLightUserdata),
-      ffi::LUA_TNUMBER => Some(LuaNumber),
-      ffi::LUA_TSTRING => Some(LuaString),
-      ffi::LUA_TTABLE => Some(LuaTable),
-      ffi::LUA_TFUNCTION => Some(LuaFunction),
-      ffi::LUA_TUSERDATA => Some(LuaUserdata),
-      ffi::LUA_TTHREAD => Some(LuaThread),
+      ffi::LUA_TNIL => Some(Type::Nil),
+      ffi::LUA_TBOOLEAN => Some(Type::Boolean),
+      ffi::LUA_TLIGHTUSERDATA => Some(Type::LightUserdata),
+      ffi::LUA_TNUMBER => Some(Type::Number),
+      ffi::LUA_TSTRING => Some(Type::String),
+      ffi::LUA_TTABLE => Some(Type::Table),
+      ffi::LUA_TFUNCTION => Some(Type::Function),
+      ffi::LUA_TUSERDATA => Some(Type::Userdata),
+      ffi::LUA_TTHREAD => Some(Type::Thread),
       _ => None
     }
   }

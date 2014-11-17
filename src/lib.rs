@@ -44,23 +44,10 @@ pub use state::{
   Index,
 
   Arithmetic,
-  LuaAdd, LuaSub, LuaMul, LuaMod, LuaPow, LuaDiv, LuaIDiv,
-  LuaBAnd, LuaBOr, LuaBXor, LuaShl, LuaShr, LuaUnm, LuaBNot,
-
   Comparison,
-  LuaEq, LuaLt, LuaLe,
-
   ThreadStatus,
-  LuaOk, LuaYield, LuaRuntimeError, LuaSyntaxError, LuaMemoryError,
-  LuaGcError, LuaMessageHandlerError, LuaFileError,
-
   GcOption,
-  GcStop, GcRestart, GcCollect, GcCount, GcCountBytes, GcStep, GcSetPause,
-  GcSetStepMul, GcIsRunning,
-
   Type,
-  LuaNone, LuaNil, LuaBoolean, LuaLightUserdata, LuaNumber, LuaString,
-  LuaTable, LuaFunction, LuaUserdata, LuaThread,
 
   Reference,
   REFNIL, NOREF,
