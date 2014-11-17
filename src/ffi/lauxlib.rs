@@ -165,13 +165,13 @@ pub unsafe fn luaL_optint(L: *mut lua_State, n: c_int, d: c_int) -> c_int {
 #[inline(always)]
 #[deprecated]
 pub unsafe fn luaL_checklong(L: *mut lua_State, n: c_int) -> c_long {
-  luaL_checkinteger(L, n) as c_int
+  luaL_checkinteger(L, n) as c_long
 }
 
 #[inline(always)]
 #[deprecated]
 pub unsafe fn luaL_optlong(L: *mut lua_State, n: c_int, d: c_long) -> c_long {
-  luaL_optinteger(L, n, d as lua_Integer) as c_int
+  luaL_optinteger(L, n, d as lua_Integer) as c_long
 }
 
 #[inline(always)]
