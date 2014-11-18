@@ -583,7 +583,7 @@ impl<'lua> State<'lua> {
   ///
   /// # Example
   ///
-  /// ```
+  /// ```ignore
   /// *state.new_userdata_typed() = MyStruct::new(...);
   /// state.set_metatable_from_registry(-1, "MyStruct");
   /// ```
