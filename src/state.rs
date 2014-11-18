@@ -574,8 +574,8 @@ impl<'lua> State<'lua> {
   /// Maps to `lua_newuserdata`. The pointer returned is owned by the Lua state
   /// and it will be garbage collected when it is no longer in use or the state
   /// is closed. To specify custom cleanup behavior, use a `__gc` metamethod.
-  pub fn new_userdata(&mut self, sz: uint) -> *mut c_void {
-    unsafe { ffi::lua_newuserdata(self.L, sz as size_t) }
+  pub fn new_userdata(&mut self, sz: size_t) -> *mut c_void {
+    unsafe { ffi::lua_newuserdata(self.L, sz) }
   }
 
   /// Convenience function that uses type information to call `new_userdata`
@@ -588,7 +588,7 @@ impl<'lua> State<'lua> {
   /// state.set_metatable_from_registry(-1, "MyStruct");
   /// ```
   pub fn new_userdata_typed<T>(&mut self) -> *mut T {
-    self.new_userdata(mem::size_of::<T>()) as *mut T
+    self.new_userdata(mem::size_of::<T>() as size_t) as *mut T
   }
 
   /// Maps to `lua_getmetatable`.
