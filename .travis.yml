@@ -5,6 +5,7 @@ install:
   - wget http://www.lua.org/work/lua-5.3.0-beta.tar.gz
   - tar -zxf lua-5.3.0-beta.tar.gz
   - cd lua-5.3.0-beta
+  - sed -i '/MYCFLAGS=/c\MYCFLAGS=-fPIC' src/Makefile
   - make linux && sudo make install
   - cd -
   - chmod +x ./prebuild.sh
