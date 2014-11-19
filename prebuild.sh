@@ -15,6 +15,22 @@ if [ ! -f "$LUA_INCLUDE/lua.h" ]; then
   exit 1
 fi
 
+echo "Compiling checkver.c..."
+gcc -I "$LUA_INCLUDE" "src/glue/checkver.c" -o build/checkver
+
+if [ $? -ne 0 ]; then
+  echo "Compilation error; aborting."
+  exit 1
+fi
+
+build/checkver
+
+if [ $? -ne 0 ]; then
+  echo "Bad Lua version. Ensure that LUA_INCLUDE points to a directory containing"
+  echo "Lua 5.3 header files."
+  exit 1
+fi
+
 echo "Compiling glue.c..."
 gcc -I "$LUA_INCLUDE" "src/glue/glue.c" -o build/glue
 
