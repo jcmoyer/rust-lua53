@@ -84,17 +84,17 @@ impl<T: ToLua> ToLua for Option<T> {
 /// behaves like one of the `lua_to*` functions for consistency.
 pub trait FromLua {
   /// Converts the value on top of the stack of a Lua state to a value of type
-  /// `Self`.
-  fn from_lua(state: &mut State) -> Self;
+  /// `Option<Self>`.
+  fn from_lua(state: &mut State) -> Option<Self>;
 }
 
-impl FromLua for Option<String> {
+impl FromLua for String {
   fn from_lua(state: &mut State) -> Option<String> {
     state.to_str(-1)
   }
 }
 
-impl FromLua for Option<Integer> {
+impl FromLua for Integer {
   fn from_lua(state: &mut State) -> Option<Integer> {
     if state.is_integer(-1) {
       Some(state.to_integer(-1))
@@ -104,7 +104,7 @@ impl FromLua for Option<Integer> {
   }
 }
 
-impl FromLua for Option<Number> {
+impl FromLua for Number {
   fn from_lua(state: &mut State) -> Option<Number> {
     if state.is_number(-1) {
       Some(state.to_number(-1))
@@ -114,7 +114,7 @@ impl FromLua for Option<Number> {
   }
 }
 
-impl FromLua for Option<bool> {
+impl FromLua for bool {
   fn from_lua(state: &mut State) -> Option<bool> {
     if state.is_bool(-1) {
       Some(state.to_bool(-1))
@@ -126,15 +126,12 @@ impl FromLua for Option<bool> {
 
 #[experimental]
 impl FromLua for Function {
-  fn from_lua(state: &mut State) -> Function {
-    state.to_native_fn(-1)
-  }
-}
-
-#[experimental]
-impl<T: FromLua> FromLua for Option<T> {
-  fn from_lua(state: &mut State) -> Option<T> {
-    FromLua::from_lua(state)
+  fn from_lua(state: &mut State) -> Option<Function> {
+    if state.is_native_fn(-1) {
+      Some(state.to_native_fn(-1))
+    } else {
+      None
+    }
   }
 }
 

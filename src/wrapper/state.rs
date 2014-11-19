@@ -267,7 +267,7 @@ impl<'lua> State<'lua> {
 
   /// Converts the value on top of the stack to a value of type `T` and returns
   /// it.
-  pub fn to_type<T: FromLua>(&mut self) -> T {
+  pub fn to_type<T: FromLua>(&mut self) -> Option<T> {
     FromLua::from_lua(self)
   }
 
