@@ -20,48 +20,5 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#![crate_name = "lua"]
-#![crate_type = "lib"]
-#![comment = "Lua 5.3 bindings for Rust"]
-#![license = "MIT"]
-
-#![feature(unsafe_destructor)]
-
-extern crate libc;
-
-pub use wrapper::state::{
-  State,
-
-  Number,
-  Integer,
-  Function,
-  Continuation,
-  Reader,
-  Writer,
-  Context,
-  Allocator,
-  Hook,
-  Index,
-
-  Arithmetic,
-  Comparison,
-  ThreadStatus,
-  GcOption,
-  Type,
-
-  Reference,
-  REFNIL, NOREF,
-
-  HookMask,
-  MASKCALL, MASKRET, MASKLINE, MASKCOUNT,
-
-  MULTRET, REGISTRYINDEX,
-  RIDX_MAINTHREAD, RIDX_GLOBALS
-};
-
-#[link(name="lua53")]
-extern {}
-
-pub mod ffi;
-pub mod wrapper;
+pub mod state;
 
