@@ -41,6 +41,7 @@ use std::mem;
 use std::ptr;
 use std::c_str::CString;
 use std::str::{MaybeOwned, Slice, Owned};
+use super::convert::{ToLua, FromLua};
 
 /// Represents a Lua number. For most installations, this is a 64-bit floating
 /// point number.
@@ -257,6 +258,17 @@ impl<'lua> State<'lua> {
       ffi::luaL_dostring(self.L, c_str)
     });
     result == ffi::LUA_OK
+  }
+
+  /// Pushes the given value onto the stack.
+  pub fn push<T: ToLua>(&mut self, value: T) {
+    value.to_lua(self);
+  }
+
+  /// Converts the value on top of the stack to a value of type `T` and returns
+  /// it.
+  pub fn to_type<T: FromLua>(&mut self) -> T {
+    FromLua::from_lua(self)
   }
 
   //===========================================================================
