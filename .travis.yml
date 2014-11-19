@@ -11,3 +11,4 @@ install:
   - ./prebuild.sh
 script:
   - cargo build --verbose
+  - cargo test --verbose
