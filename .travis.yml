@@ -10,4 +10,4 @@ install:
   - chmod +x ./prebuild.sh
   - ./prebuild.sh
 script:
-  - cargo build
+  - cargo build --verbose
