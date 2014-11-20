@@ -84,7 +84,7 @@ pub extern "C" fn luaopen_mathx(L: *mut lua_State) -> c_int {
   // construct a state wrapper object from the pointer we were given
   let mut state = State::from_ptr(L);
   // create a new table and set fields for each function defined in MATHX_LIB
-  state.new_lib(MATHX_LIB);
+  state.new_lib(&MATHX_LIB);
   // return it on the stack
   1
 }
