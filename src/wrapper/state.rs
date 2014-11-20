@@ -245,19 +245,19 @@ impl<'lua> State<'lua> {
   }
 
   /// Maps to `luaL_dofile`.
-  pub fn do_file(&mut self, filename: &str) -> bool {
+  pub fn do_file(&mut self, filename: &str) -> ThreadStatus {
     let result = filename.with_c_str(|c_str| unsafe {
       ffi::luaL_dofile(self.L, c_str)
     });
-    result == ffi::LUA_OK
+    ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Maps to `luaL_dostring`.
-  pub fn do_string(&mut self, s: &str) -> bool {
+  pub fn do_string(&mut self, s: &str) -> ThreadStatus {
     let result = s.with_c_str(|c_str| unsafe {
       ffi::luaL_dostring(self.L, c_str)
     });
-    result == ffi::LUA_OK
+    ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Pushes the given value onto the stack.
