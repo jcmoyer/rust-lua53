@@ -1,29 +1,50 @@
 # rust-lua53 [![Build Status](https://travis-ci.org/jcmoyer/rust-lua53.svg?branch=master)](https://travis-ci.org/jcmoyer/rust-lua53)
-Aims to be complete Rust bindings for Lua 5.3 and beyond. Currently, `master` is tracking Lua `5.3.0-beta`.
+Aims to be complete Rust bindings for Lua 5.3 and beyond. Currently, `master`
+is tracking Lua `5.3.0-beta`.
 
 Requires:
 - gcc
 - bash
 - a Lua 5.3 installation
 
-## Linux
+**NOTE:** The build process requires Lua 5.3 headers for code generation
+purposes. If you built and installed normally, these will be located in
+`/usr/local/include` in both Linux and Windows MSYS2 environments. In this
+case, the build script will find them automatically. If for some reason these
+headers are elsewhere, you will need to export an environment variable called
+`LUA_INCLUDE` that points to a directory containing these
+files.
 
-    cargo build
+### Using crates.io
 
-The build script will look for Lua 5.3 headers in `/usr/local/include`. If you
-need to specify a different directory, you can export `LUA_INCLUDE`.
+Add this to your `Cargo.toml`:
 
-## Windows
+```
+[dependencies]
+lua = "~0.0.1"
+```
 
-The cargo situation on Windows isn't so great, so you'll probably get an error
-just running `cargo build`. You will have to invoke `prebuild.sh` manually:
+### Using git
 
-    ./prebuild.sh
-    cargo build
+Add this to your `Cargo.toml`:
 
-Like above, if Lua 5.3 headers aren't in `/usr/local/include` (as they should
-be if you're using an MSYS2 bash shell), you will need to specify a different
-directory using the the environment variable `LUA_INCLUDE`.
+```
+[dependencies.lua]
+git = "https://github.com/jcmoyer/rust-lua53"
+```
+
+### Manual
+
+If for some reason you're not using cargo (perhaps in Lua spirit!), you can
+clone this repository and build it yourself:
+
+```
+git clone https://github.com/jcmoyer/rust-lua53.git
+cd rust-lua53
+chmod +x ./prebuild.sh
+./prebuild.sh
+rustc src/lib.rs
+```
 
 # License
 Licensed under the MIT License, which is the same license Lua is distributed
