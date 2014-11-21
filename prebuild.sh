@@ -3,9 +3,8 @@ echo "Making directory build/..."
 mkdir -p build/
 
 if [ -z "$LUA_INCLUDE" ]; then
-  echo "The variable LUA_INCLUDE is not set. Ensure that it points to a directory"
-  echo "containing Lua 5.3 header files and re-run this script."
-  exit 1
+  LUA_INCLUDE=/usr/local/include
+  echo "WARNING: LUA_INCLUDE not set; defaulting to $LUA_INCLUDE"
 fi
 
 if [ ! -f "$LUA_INCLUDE/lua.h" ]; then

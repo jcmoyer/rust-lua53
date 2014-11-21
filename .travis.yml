@@ -1,7 +1,6 @@
 language: rust
 env:
   global:
-    - LUA_INCLUDE=/usr/local/include
     - secure: XvYTUR5JGOQ+RcWEu4wkgbwZix7f+8n09JORdKH0cYIj68Em0KOX9oXm0VFwfrjhas9Mb8IhBxOdOJP5xzCRSjARA8Qu91ZA/ZPnN/hcARm/rqG737qPM5IRlxA6+nl5hvkRC7hA2OjpA4wrUJtrcOfZvF/UFVKOJ328dpWJ9bA=
 install:
   - wget http://www.lua.org/work/lua-5.3.0-beta.tar.gz

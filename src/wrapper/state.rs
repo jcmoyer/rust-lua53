@@ -428,11 +428,12 @@ impl<'lua> State<'lua> {
   }
 
   /// Maps to `lua_touserdata`.
-  pub unsafe fn to_userdata(&mut self, index: Index) -> *mut c_void {
-    ffi::lua_touserdata(self.L, index)
+  pub fn to_userdata(&mut self, index: Index) -> *mut c_void {
+    unsafe { ffi::lua_touserdata(self.L, index) }
   }
 
   /// Convenience function that calls `to_userdata` and performs a cast.
+  #[experimental]
   pub unsafe fn to_userdata_typed<T>(&mut self, index: Index) -> Option<&'lua mut T> {
     mem::transmute(self.to_userdata(index))
   }
@@ -599,6 +600,7 @@ impl<'lua> State<'lua> {
   /// *state.new_userdata_typed() = MyStruct::new(...);
   /// state.set_metatable_from_registry(-1, "MyStruct");
   /// ```
+  #[experimental]
   pub fn new_userdata_typed<T>(&mut self) -> *mut T {
     self.new_userdata(mem::size_of::<T>() as size_t) as *mut T
   }
@@ -1087,21 +1089,23 @@ impl<'lua> State<'lua> {
   }
 
   /// Maps to `luaL_testudata`.
-  pub unsafe fn test_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
-    tname.with_c_str(|c_str| ffi::luaL_testudata(self.L, arg, c_str))
+  pub fn test_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
+    unsafe { tname.with_c_str(|c_str| ffi::luaL_testudata(self.L, arg, c_str)) }
   }
 
   /// Convenience function that calls `test_userdata` and performs a cast.
+  #[experimental]
   pub unsafe fn test_userdata_typed<T>(&mut self, arg: Index, tname: &str) -> Option<&'lua mut T> {
     mem::transmute(self.test_userdata(arg, tname))
   }
 
   /// Maps to `luaL_checkudata`.
-  pub unsafe fn check_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
-    tname.with_c_str(|c_str| ffi::luaL_checkudata(self.L, arg, c_str))
+  pub fn check_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
+    unsafe { tname.with_c_str(|c_str| ffi::luaL_checkudata(self.L, arg, c_str)) }
   }
 
   /// Convenience function that calls `check_userdata` and performs a cast.
+  #[experimental]
   pub unsafe fn check_userdata_typed<T>(&mut self, arg: Index, tname: &str) -> &'lua mut T {
     mem::transmute(self.check_userdata(arg, tname))
   }
