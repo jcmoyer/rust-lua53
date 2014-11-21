@@ -11,4 +11,4 @@ keywords = [
   "lua", "lua53", "rust-lua53", "bindings"
 ]
 license = "MIT"
-
+build = "build.rs"
