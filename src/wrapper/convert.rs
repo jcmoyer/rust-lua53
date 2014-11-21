@@ -39,6 +39,12 @@ impl<'a> ToLua for &'a str {
   }
 }
 
+impl ToLua for String {
+  fn to_lua(&self, state: &mut State) {
+    state.push_string(self.as_slice());
+  }
+}
+
 impl ToLua for Integer {
   fn to_lua(&self, state: &mut State) {
     state.push_integer(*self)
