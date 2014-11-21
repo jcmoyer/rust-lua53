@@ -8,8 +8,7 @@ documentation = "http://www.rust-ci.org/jcmoyer/rust-lua53/doc/lua/"
 repository = "https://github.com/jcmoyer/rust-lua53"
 readme = "README.md"
 keywords = [
-  "lua", "lua 5.3", "lua53", "rust-lua53",
-  "scripting language", "bindings"
+  "lua", "lua53", "rust-lua53", "bindings"
 ]
 license = "MIT"
 
