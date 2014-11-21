@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+//! Implements conversions for Rust types to and from Lua.
+
 use super::state::{State, Integer, Number, Function};
 
 /// Trait for types that can be pushed onto the stack of a Lua state.

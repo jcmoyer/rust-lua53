@@ -20,7 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// corresponds to lua.h
+//! Contains definitions from `lua.h`.
+
 use libc::{c_void, c_int, c_char, c_uchar, size_t};
 use ffi::luaconf;
 use std::ptr;

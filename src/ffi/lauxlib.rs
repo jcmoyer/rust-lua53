@@ -20,7 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// corresponds to lauxlib.h
+//! Contains definitions from `lauxlib.h`.
+
 use libc::{c_int, c_long, c_char, c_void, size_t};
 use ffi::lua;
 use ffi::lua::{lua_State, lua_CFunction, lua_Integer, lua_Number};

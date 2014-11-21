@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+//! Low level bindings to Lua.
+
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 

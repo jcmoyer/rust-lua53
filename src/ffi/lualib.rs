@@ -20,7 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// corresponds to lualib.h
+//! Contains definitions from `lualib.h`.
+
 use ffi::lua::lua_State;
 use libc::c_int;
 

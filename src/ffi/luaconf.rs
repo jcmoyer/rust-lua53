@@ -20,7 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// corresponds to luaconf.h
+//! Contains definitions from `luaconf.h`.
+
 pub use super::glue::LUAL_BUFFERSIZE;
 pub use super::glue::LUA_NUMBER;
 pub use super::glue::LUA_INTEGER;
