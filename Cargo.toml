@@ -1,7 +1,7 @@
 [package]
 
 name = "lua"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["J.C. Moyer"]
 description = "Bindings to Lua 5.3"
 documentation = "http://www.rust-ci.org/jcmoyer/rust-lua53/doc/lua/"
