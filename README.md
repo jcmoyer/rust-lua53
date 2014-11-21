@@ -46,6 +46,18 @@ chmod +x ./prebuild.sh
 rustc src/lib.rs
 ```
 
+# Example
+
+```rust
+extern crate lua;
+
+fn main() {
+  let mut state = lua::State::new();
+  state.open_libs();
+  state.do_string("print('hello world!')");
+}
+```
+
 # License
 Licensed under the MIT License, which is the same license Lua is distributed
 under. Refer to `LICENSE.md` for more information.
