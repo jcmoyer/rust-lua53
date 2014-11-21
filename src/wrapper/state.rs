@@ -428,8 +428,8 @@ impl<'lua> State<'lua> {
   }
 
   /// Maps to `lua_touserdata`.
-  pub unsafe fn to_userdata(&mut self, index: Index) -> *mut c_void {
-    ffi::lua_touserdata(self.L, index)
+  pub fn to_userdata(&mut self, index: Index) -> *mut c_void {
+    unsafe { ffi::lua_touserdata(self.L, index) }
   }
 
   /// Convenience function that calls `to_userdata` and performs a cast.
@@ -1089,8 +1089,8 @@ impl<'lua> State<'lua> {
   }
 
   /// Maps to `luaL_testudata`.
-  pub unsafe fn test_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
-    tname.with_c_str(|c_str| ffi::luaL_testudata(self.L, arg, c_str))
+  pub fn test_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
+    unsafe { tname.with_c_str(|c_str| ffi::luaL_testudata(self.L, arg, c_str)) }
   }
 
   /// Convenience function that calls `test_userdata` and performs a cast.
@@ -1100,8 +1100,8 @@ impl<'lua> State<'lua> {
   }
 
   /// Maps to `luaL_checkudata`.
-  pub unsafe fn check_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
-    tname.with_c_str(|c_str| ffi::luaL_checkudata(self.L, arg, c_str))
+  pub fn check_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
+    unsafe { tname.with_c_str(|c_str| ffi::luaL_checkudata(self.L, arg, c_str)) }
   }
 
   /// Convenience function that calls `check_userdata` and performs a cast.
