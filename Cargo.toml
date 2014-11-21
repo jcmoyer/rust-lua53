@@ -3,4 +3,13 @@
 name = "lua"
 version = "0.0.1"
 authors = ["J.C. Moyer"]
+description = "Bindings to Lua 5.3"
+documentation = "http://www.rust-ci.org/jcmoyer/rust-lua53/doc/lua/"
+repository = "https://github.com/jcmoyer/rust-lua53"
+readme = "README.md"
+keywords = [
+  "lua", "lua 5.3", "lua53", "rust-lua53",
+  "scripting language", "bindings"
+]
+license = "MIT"
 
