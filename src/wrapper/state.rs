@@ -40,7 +40,8 @@ use libc::{c_int, c_void, size_t};
 use std::mem;
 use std::ptr;
 use std::c_str::CString;
-use std::str::{MaybeOwned, Slice, Owned};
+use std::str::CowString;
+use std::borrow::{Borrowed, Owned};
 use super::convert::{ToLua, FromLua};
 
 /// Represents a Lua number. For most installations, this is a 64-bit floating
@@ -1283,11 +1284,11 @@ impl<'lua> State<'lua> {
   }
 
   /// Maps to `luaL_optstring`.
-  pub fn opt_string<'a>(&mut self, n: Index, default: &'a str) -> MaybeOwned<'a> {
+  pub fn opt_string<'a>(&mut self, n: Index, default: &'a str) -> CowString<'a> {
     default.with_c_str(|c_str| {
       let ptr = unsafe { ffi::luaL_optstring(self.L, n, c_str) };
       if ptr == c_str {
-        Slice(default)
+        Borrowed(default)
       } else {
         let cstring = unsafe { CString::new(ptr, false) };
         Owned(cstring.as_str().map(|s| String::from_str(s)).unwrap())
