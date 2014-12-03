@@ -41,7 +41,7 @@ use std::mem;
 use std::ptr;
 use std::c_str::CString;
 use std::str::CowString;
-use std::borrow::{Borrowed, Owned};
+use std::borrow::Cow;
 use super::convert::{ToLua, FromLua};
 
 /// Represents a Lua number. For most installations, this is a 64-bit floating
@@ -1288,10 +1288,10 @@ impl<'lua> State<'lua> {
     default.with_c_str(|c_str| {
       let ptr = unsafe { ffi::luaL_optstring(self.L, n, c_str) };
       if ptr == c_str {
-        Borrowed(default)
+        Cow::Borrowed(default)
       } else {
         let cstring = unsafe { CString::new(ptr, false) };
-        Owned(cstring.as_str().map(|s| String::from_str(s)).unwrap())
+        Cow::Owned(cstring.as_str().map(|s| String::from_str(s)).unwrap())
       }
     })
   }
