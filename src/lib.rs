@@ -22,8 +22,6 @@
 
 #![crate_name = "lua"]
 #![crate_type = "lib"]
-#![comment = "Lua 5.3 bindings for Rust"]
-#![license = "MIT"]
 
 #![feature(unsafe_destructor)]
 
