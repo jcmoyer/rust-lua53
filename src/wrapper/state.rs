@@ -64,7 +64,7 @@ pub type Hook = ffi::lua_Hook;
 pub type Index = c_int;
 
 /// Arithmetic operations for `lua_arith`.
-#[deriving(Show, PartialEq, Eq)]
+#[deriving(Copy, Show, PartialEq, Eq)]
 pub enum Arithmetic {
   Add = ffi::LUA_OPADD as int,
   Sub = ffi::LUA_OPSUB as int,
@@ -83,7 +83,7 @@ pub enum Arithmetic {
 }
 
 /// Comparison operations for `lua_compare`.
-#[deriving(Show, PartialEq, Eq)]
+#[deriving(Copy, Show, PartialEq, Eq)]
 pub enum Comparison {
   Eq = ffi::LUA_OPEQ as int,
   Lt = ffi::LUA_OPLT as int,
@@ -91,7 +91,7 @@ pub enum Comparison {
 }
 
 /// Status of a Lua state.
-#[deriving(Show, PartialEq, Eq)]
+#[deriving(Copy, Show, PartialEq, Eq)]
 pub enum ThreadStatus {
   Ok = ffi::LUA_OK as int,
   Yield = ffi::LUA_YIELD as int,
@@ -120,7 +120,7 @@ impl ThreadStatus {
 }
 
 /// Options for the Lua garbage collector.
-#[deriving(Show, PartialEq, Eq)]
+#[deriving(Copy, Show, PartialEq, Eq)]
 pub enum GcOption {
   Stop = ffi::LUA_GCSTOP as int,
   Restart = ffi::LUA_GCRESTART as int,
@@ -134,7 +134,7 @@ pub enum GcOption {
 }
 
 /// Represents all possible Lua data types.
-#[deriving(Show, PartialEq, Eq)]
+#[deriving(Copy, Show, PartialEq, Eq)]
 pub enum Type {
   None = ffi::LUA_TNONE as int,
   Nil = ffi::LUA_TNIL as int,
@@ -166,7 +166,7 @@ impl Type {
 }
 
 /// Type used for Lua references generated through `luaL_ref` and `luaL_unref`.
-#[deriving(Show, PartialEq, Eq)]
+#[deriving(Copy, Show, PartialEq, Eq)]
 pub struct Reference(c_int);
 
 /// The value for all references to nil values.

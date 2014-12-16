@@ -436,3 +436,5 @@ pub struct lua_Debug {
   // lua.h mentions this is for private use
   i_ci: *mut c_void,
 }
+
+impl Copy for lua_Debug {}

@@ -40,6 +40,8 @@ pub struct luaL_Reg {
   pub func: lua_CFunction,
 }
 
+impl Copy for luaL_Reg {}
+
 #[inline(always)]
 pub unsafe fn luaL_checkversion(L: *mut lua_State) {
   luaL_checkversion_(L, lua::LUA_VERSION_NUM as lua_Number, LUAL_NUMSIZES as size_t)
@@ -221,6 +223,8 @@ pub struct luaL_Buffer {
   pub initb: [c_char, ..LUAL_BUFFERSIZE as uint]
 }
 
+impl Copy for luaL_Buffer {}
+
 // TODO: Test this thoroughly
 #[inline(always)]
 pub unsafe fn luaL_addchar(B: *mut luaL_Buffer, c: c_char) {
@@ -259,5 +263,7 @@ pub struct luaL_Stream {
   pub f: *mut ::libc::FILE,
   pub closef: lua_CFunction
 }
+
+impl Copy for luaL_Stream {}
 
 // omitted: old module system compatibility
