@@ -223,7 +223,7 @@ pub struct State<'lua> {
 impl<'lua> State<'lua> {
   /// Initializes a new Lua state. This function does not open any libraries
   /// by default. Calls `luaL_newstate` internally.
-  pub fn new<'lua>() -> State<'lua> {
+  pub fn new() -> State<'lua> {
     let state = unsafe { ffi::luaL_newstate() };
     State { L: state, owned: true }
   }
