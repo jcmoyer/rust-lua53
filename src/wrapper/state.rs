@@ -42,6 +42,7 @@ use std::ptr;
 use std::c_str::CString;
 use std::str::CowString;
 use std::borrow::Cow;
+use std::borrow::ToOwned;
 use super::convert::{ToLua, FromLua};
 
 /// Represents a Lua number. For most installations, this is a 64-bit floating
@@ -383,7 +384,7 @@ impl<'lua> State<'lua> {
     unsafe {
       let ptr = ffi::lua_typename(self.L, tp as c_int);
       let cstring = CString::new(ptr, false);
-      cstring.as_str().map(|s| String::from_str(s)).unwrap()
+      cstring.as_str().unwrap().to_owned()
     }
   }
 
@@ -888,7 +889,7 @@ impl<'lua> State<'lua> {
       None
     } else {
       let cstring = unsafe { CString::new(ptr, false) };
-      cstring.as_str().map(|s| String::from_str(s))
+      cstring.as_str().map(|s| s.to_owned())
     }
   }
 
@@ -939,7 +940,7 @@ impl<'lua> State<'lua> {
       None
     } else {
       let cstring = unsafe { CString::new(ptr, false) };
-      cstring.as_str().map(|s| String::from_str(s))
+      cstring.as_str().map(|s| s.to_owned())
     }
   }
 
@@ -950,7 +951,7 @@ impl<'lua> State<'lua> {
       None
     } else {
       let cstring = unsafe { CString::new(ptr, false) };
-      cstring.as_str().map(|s| String::from_str(s))
+      cstring.as_str().map(|s| s.to_owned())
     }
   }
 
@@ -961,7 +962,7 @@ impl<'lua> State<'lua> {
       None
     } else {
       let cstring = unsafe { CString::new(ptr, false) };
-      cstring.as_str().map(|s| String::from_str(s))
+      cstring.as_str().map(|s| s.to_owned())
     }
   }
 
@@ -972,7 +973,7 @@ impl<'lua> State<'lua> {
       None
     } else {
       let cstring = unsafe { CString::new(ptr, false) };
-      cstring.as_str().map(|s| String::from_str(s))
+      cstring.as_str().map(|s| s.to_owned())
     }
   }
 
@@ -1221,7 +1222,7 @@ impl<'lua> State<'lua> {
       })
     };
     let cstring = unsafe { CString::new(ptr, false) };
-    cstring.as_str().map(|s| String::from_str(s)).unwrap()
+    cstring.as_str().unwrap().to_owned()
   }
 
   /// Maps to `luaL_setfuncs`.
@@ -1280,7 +1281,7 @@ impl<'lua> State<'lua> {
   pub fn check_string(&mut self, n: Index) -> String {
     let ptr = unsafe { ffi::luaL_checkstring(self.L, n) };
     let cstring = unsafe { CString::new(ptr, false) };
-    cstring.as_str().map(|s| String::from_str(s)).unwrap()
+    cstring.as_str().unwrap().to_owned()
   }
 
   /// Maps to `luaL_optstring`.
@@ -1291,7 +1292,7 @@ impl<'lua> State<'lua> {
         Cow::Borrowed(default)
       } else {
         let cstring = unsafe { CString::new(ptr, false) };
-        Cow::Owned(cstring.as_str().map(|s| String::from_str(s)).unwrap())
+        Cow::Owned(cstring.as_str().unwrap().to_owned())
       }
     })
   }
@@ -1305,7 +1306,7 @@ impl<'lua> State<'lua> {
   pub fn typename_at(&mut self, n: Index) -> String {
     let ptr = unsafe { ffi::luaL_typename(self.L, n) };
     let cstring = unsafe { CString::new(ptr, false) };
-    cstring.as_str().map(|s| String::from_str(s)).unwrap()
+    cstring.as_str().unwrap().to_owned()
   }
 
   // luaL_dofile and luaL_dostring implemented above
