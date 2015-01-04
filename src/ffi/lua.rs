@@ -354,6 +354,7 @@ pub unsafe fn lua_isnoneornil(L: *mut lua_State, n: c_int) -> c_int {
 // TODO: Test
 #[inline(always)]
 pub unsafe fn lua_pushliteral(L: *mut lua_State, s: &'static str) -> *const c_char {
+  use std::c_str::ToCStr;
   s.with_c_str(|c_str| lua_pushlstring(L, c_str, s.len() as size_t))
 }
 
@@ -432,7 +433,7 @@ pub struct lua_Debug {
   pub nparams: c_uchar,
   pub isvararg: c_char,
   pub istailcall: c_char,
-  pub short_src: [c_char, ..luaconf::LUA_IDSIZE as uint],
+  pub short_src: [c_char; luaconf::LUA_IDSIZE as uint],
   // lua.h mentions this is for private use
   i_ci: *mut c_void,
 }
