@@ -21,7 +21,7 @@ Add this to your `Cargo.toml`:
 
 ```
 [dependencies]
-lua = "~0.0.1"
+lua = "*"
 ```
 
 ### Using git
