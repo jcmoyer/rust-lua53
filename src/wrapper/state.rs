@@ -40,7 +40,7 @@ use libc::{c_int, c_void, size_t};
 use std::mem;
 use std::ptr;
 use std::c_str::{CString, ToCStr};
-use std::str::CowString;
+use std::string::CowString;
 use std::borrow::Cow;
 use std::borrow::ToOwned;
 use super::convert::{ToLua, FromLua};
