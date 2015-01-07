@@ -37,7 +37,7 @@ use lua::{State, Function};
 use libc::c_int;
 
 // sin/cos/tan
-use std::num::FloatMath;
+use std::num::Float;
 
 // simple binding to Rust's sin function
 #[allow(non_snake_case)]
@@ -70,10 +70,10 @@ extern "C" fn tan(L: *mut lua_State) -> c_int {
 }
 
 // mapping of function name to function pointer
-const MATHX_LIB: [(&'static str, Function), ..3] = [
-  ("sin", Some(sin)),
-  ("cos", Some(cos)),
-  ("tan", Some(tan)),
+const MATHX_LIB: [(&'static str, Function); 3] = [
+  ("sin", Some::<extern "C" fn(*mut lua_State) -> c_int>(sin)),
+  ("cos", Some::<extern "C" fn(*mut lua_State) -> c_int>(cos)),
+  ("tan", Some::<extern "C" fn(*mut lua_State) -> c_int>(tan)),
 ];
 
 // the format of this function name is defined by the Lua manual; the Lua
