@@ -68,41 +68,41 @@ pub type Index = c_int;
 /// Arithmetic operations for `lua_arith`.
 #[derive(Copy, Show, PartialEq, Eq)]
 pub enum Arithmetic {
-  Add = ffi::LUA_OPADD as int,
-  Sub = ffi::LUA_OPSUB as int,
-  Mul = ffi::LUA_OPMUL as int,
-  Mod = ffi::LUA_OPMOD as int,
-  Pow = ffi::LUA_OPPOW as int,
-  Div = ffi::LUA_OPDIV as int,
-  IDiv = ffi::LUA_OPIDIV as int,
-  BAnd = ffi::LUA_OPBAND as int,
-  BOr = ffi::LUA_OPBOR as int,
-  BXor = ffi::LUA_OPBXOR as int,
-  Shl = ffi::LUA_OPSHL as int,
-  Shr = ffi::LUA_OPSHR as int,
-  Unm = ffi::LUA_OPUNM as int,
-  BNot = ffi::LUA_OPBNOT as int,
+  Add = ffi::LUA_OPADD as isize,
+  Sub = ffi::LUA_OPSUB as isize,
+  Mul = ffi::LUA_OPMUL as isize,
+  Mod = ffi::LUA_OPMOD as isize,
+  Pow = ffi::LUA_OPPOW as isize,
+  Div = ffi::LUA_OPDIV as isize,
+  IDiv = ffi::LUA_OPIDIV as isize,
+  BAnd = ffi::LUA_OPBAND as isize,
+  BOr = ffi::LUA_OPBOR as isize,
+  BXor = ffi::LUA_OPBXOR as isize,
+  Shl = ffi::LUA_OPSHL as isize,
+  Shr = ffi::LUA_OPSHR as isize,
+  Unm = ffi::LUA_OPUNM as isize,
+  BNot = ffi::LUA_OPBNOT as isize,
 }
 
 /// Comparison operations for `lua_compare`.
 #[derive(Copy, Show, PartialEq, Eq)]
 pub enum Comparison {
-  Eq = ffi::LUA_OPEQ as int,
-  Lt = ffi::LUA_OPLT as int,
-  Le = ffi::LUA_OPLE as int,
+  Eq = ffi::LUA_OPEQ as isize,
+  Lt = ffi::LUA_OPLT as isize,
+  Le = ffi::LUA_OPLE as isize,
 }
 
 /// Status of a Lua state.
 #[derive(Copy, Show, PartialEq, Eq)]
 pub enum ThreadStatus {
-  Ok = ffi::LUA_OK as int,
-  Yield = ffi::LUA_YIELD as int,
-  RuntimeError = ffi::LUA_ERRRUN as int,
-  SyntaxError = ffi::LUA_ERRSYNTAX as int,
-  MemoryError = ffi::LUA_ERRMEM as int,
-  GcError = ffi::LUA_ERRGCMM as int,
-  MessageHandlerError = ffi::LUA_ERRERR as int,
-  FileError = ffi::LUA_ERRFILE as int,
+  Ok = ffi::LUA_OK as isize,
+  Yield = ffi::LUA_YIELD as isize,
+  RuntimeError = ffi::LUA_ERRRUN as isize,
+  SyntaxError = ffi::LUA_ERRSYNTAX as isize,
+  MemoryError = ffi::LUA_ERRMEM as isize,
+  GcError = ffi::LUA_ERRGCMM as isize,
+  MessageHandlerError = ffi::LUA_ERRERR as isize,
+  FileError = ffi::LUA_ERRFILE as isize,
 }
 
 impl ThreadStatus {
@@ -124,30 +124,30 @@ impl ThreadStatus {
 /// Options for the Lua garbage collector.
 #[derive(Copy, Show, PartialEq, Eq)]
 pub enum GcOption {
-  Stop = ffi::LUA_GCSTOP as int,
-  Restart = ffi::LUA_GCRESTART as int,
-  Collect = ffi::LUA_GCCOLLECT as int,
-  Count = ffi::LUA_GCCOUNT as int,
-  CountBytes = ffi::LUA_GCCOUNTB as int,
-  Step = ffi::LUA_GCSTEP as int,
-  SetPause = ffi::LUA_GCSETPAUSE as int,
-  SetStepMul = ffi::LUA_GCSETSTEPMUL as int,
-  IsRunning = ffi::LUA_GCISRUNNING as int,
+  Stop = ffi::LUA_GCSTOP as isize,
+  Restart = ffi::LUA_GCRESTART as isize,
+  Collect = ffi::LUA_GCCOLLECT as isize,
+  Count = ffi::LUA_GCCOUNT as isize,
+  CountBytes = ffi::LUA_GCCOUNTB as isize,
+  Step = ffi::LUA_GCSTEP as isize,
+  SetPause = ffi::LUA_GCSETPAUSE as isize,
+  SetStepMul = ffi::LUA_GCSETSTEPMUL as isize,
+  IsRunning = ffi::LUA_GCISRUNNING as isize,
 }
 
 /// Represents all possible Lua data types.
 #[derive(Copy, Show, PartialEq, Eq)]
 pub enum Type {
-  None = ffi::LUA_TNONE as int,
-  Nil = ffi::LUA_TNIL as int,
-  Boolean = ffi::LUA_TBOOLEAN as int,
-  LightUserdata = ffi::LUA_TLIGHTUSERDATA as int,
-  Number = ffi::LUA_TNUMBER as int,
-  String = ffi::LUA_TSTRING as int,
-  Table = ffi::LUA_TTABLE as int,
-  Function = ffi::LUA_TFUNCTION as int,
-  Userdata = ffi::LUA_TUSERDATA as int,
-  Thread = ffi::LUA_TTHREAD as int,
+  None = ffi::LUA_TNONE as isize,
+  Nil = ffi::LUA_TNIL as isize,
+  Boolean = ffi::LUA_TBOOLEAN as isize,
+  LightUserdata = ffi::LUA_TLIGHTUSERDATA as isize,
+  Number = ffi::LUA_TNUMBER as isize,
+  String = ffi::LUA_TSTRING as isize,
+  Table = ffi::LUA_TTABLE as isize,
+  Function = ffi::LUA_TFUNCTION as isize,
+  Userdata = ffi::LUA_TUSERDATA as isize,
+  Thread = ffi::LUA_TTHREAD as isize,
 }
 
 impl Type {
@@ -715,7 +715,7 @@ impl<'lua> State<'lua> {
     ThreadStatus::from_c_int(result).unwrap()
   }
 
-  // returns int because the return value is dependent on the writer - seems to
+  // returns isize because the return value is dependent on the writer - seems to
   // be usable for anything
   /// Maps to `lua_dump`.
   pub fn dump(&mut self, writer: Writer, data: *mut c_void, strip: bool) -> c_int {
@@ -1139,7 +1139,7 @@ impl<'lua> State<'lua> {
   // omitted: luaL_error
 
   /// Maps to `luaL_checkoption`.
-  pub fn check_option(&mut self, arg: Index, def: Option<&str>, lst: &[&str]) -> uint {
+  pub fn check_option(&mut self, arg: Index, def: Option<&str>, lst: &[&str]) -> usize {
     use std::vec::Vec;
     use libc::c_char;
     let mut vec: Vec<*const c_char> = Vec::with_capacity(lst.len() + 1);
@@ -1157,7 +1157,7 @@ impl<'lua> State<'lua> {
         ffi::luaL_checkoption(self.L, arg, ptr::null(), vec.as_ptr())
       }
     };
-    result as uint
+    result as usize
   }
 
   /// Maps to `luaL_fileresult`.

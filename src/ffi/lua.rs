@@ -277,7 +277,7 @@ extern {
 // here, implemented as Rust functions
 #[inline(always)]
 pub unsafe fn lua_getextraspace(L: *mut lua_State) -> *mut c_void {
-  L.offset(-super::glue::LUA_EXTRASPACE as int) as *mut c_void
+  L.offset(-super::glue::LUA_EXTRASPACE as isize) as *mut c_void
 }
 
 #[inline(always)]
@@ -395,10 +395,10 @@ pub const LUA_HOOKCOUNT: c_int = 3;
 pub const LUA_HOOKTAILCALL: c_int = 4;
 
 // Event masks
-pub const LUA_MASKCALL: c_int = 1 << (LUA_HOOKCALL as uint);
-pub const LUA_MASKRET: c_int = 1 << (LUA_HOOKRET as uint);
-pub const LUA_MASKLINE: c_int = 1 << (LUA_HOOKLINE as uint);
-pub const LUA_MASKCOUNT: c_int = 1 << (LUA_HOOKCOUNT as uint);
+pub const LUA_MASKCALL: c_int = 1 << (LUA_HOOKCALL as usize);
+pub const LUA_MASKRET: c_int = 1 << (LUA_HOOKRET as usize);
+pub const LUA_MASKLINE: c_int = 1 << (LUA_HOOKLINE as usize);
+pub const LUA_MASKCOUNT: c_int = 1 << (LUA_HOOKCOUNT as usize);
 
 // Functions to be called by the debugger in specific events
 pub type lua_Hook = Option<extern "C" fn(L: *mut lua_State, ar: *mut lua_Debug)>;
@@ -434,7 +434,7 @@ pub struct lua_Debug {
   pub nparams: c_uchar,
   pub isvararg: c_char,
   pub istailcall: c_char,
-  pub short_src: [c_char; luaconf::LUA_IDSIZE as uint],
+  pub short_src: [c_char; luaconf::LUA_IDSIZE as usize],
   // lua.h mentions this is for private use
   i_ci: *mut c_void,
 }

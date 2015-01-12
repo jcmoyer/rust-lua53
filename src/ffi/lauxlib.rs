@@ -220,7 +220,7 @@ pub struct luaL_Buffer {
   pub size: size_t,
   pub n: size_t,
   pub L: *mut lua_State,
-  pub initb: [c_char; LUAL_BUFFERSIZE as uint]
+  pub initb: [c_char; LUAL_BUFFERSIZE as usize]
 }
 
 impl Copy for luaL_Buffer {}
@@ -233,7 +233,7 @@ pub unsafe fn luaL_addchar(B: *mut luaL_Buffer, c: c_char) {
     luaL_prepbuffsize(B, 1);
   }
   // (B)->b[(B)->n++] = (c)
-  let offset = (*B).b.offset((*B).n as int);
+  let offset = (*B).b.offset((*B).n as isize);
   ptr::write(offset, c);
   (*B).n += 1;
 }
