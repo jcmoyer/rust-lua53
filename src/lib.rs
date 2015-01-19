@@ -26,6 +26,8 @@
 #![feature(unsafe_destructor)]
 
 extern crate libc;
+#[macro_use]
+extern crate bitflags;
 
 pub use wrapper::state::{
   State,

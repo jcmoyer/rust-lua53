@@ -12,3 +12,7 @@ keywords = [
 ]
 license = "MIT"
 build = "build.rs"
+
+[dependencies]
+bitflags = "0.1"
+
