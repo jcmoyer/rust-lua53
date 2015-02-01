@@ -71,9 +71,9 @@ extern "C" fn tan(L: *mut lua_State) -> c_int {
 
 // mapping of function name to function pointer
 const MATHX_LIB: [(&'static str, Function); 3] = [
-  ("sin", Some::<extern "C" fn(*mut lua_State) -> c_int>(sin)),
-  ("cos", Some::<extern "C" fn(*mut lua_State) -> c_int>(cos)),
-  ("tan", Some::<extern "C" fn(*mut lua_State) -> c_int>(tan)),
+  ("sin", Some(sin)),
+  ("cos", Some(cos)),
+  ("tan", Some(tan)),
 ];
 
 // the format of this function name is defined by the Lua manual; the Lua
