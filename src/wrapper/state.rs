@@ -438,7 +438,7 @@ impl<'lua> State<'lua> {
   }
 
   /// Convenience function that calls `to_userdata` and performs a cast.
-  #[experimental]
+  #[unstable(reason="this is an experimental function")]
   pub unsafe fn to_userdata_typed<T>(&mut self, index: Index) -> Option<&'lua mut T> {
     mem::transmute(self.to_userdata(index))
   }
@@ -608,7 +608,7 @@ impl<'lua> State<'lua> {
   /// *state.new_userdata_typed() = MyStruct::new(...);
   /// state.set_metatable_from_registry(-1, "MyStruct");
   /// ```
-  #[experimental]
+  #[unstable(reason="this is an experimental function")]
   pub fn new_userdata_typed<T>(&mut self) -> *mut T {
     self.new_userdata(mem::size_of::<T>() as size_t) as *mut T
   }
@@ -1114,7 +1114,7 @@ impl<'lua> State<'lua> {
   }
 
   /// Convenience function that calls `test_userdata` and performs a cast.
-  #[experimental]
+  #[unstable(reason="this is an experimental function")]
   pub unsafe fn test_userdata_typed<T>(&mut self, arg: Index, tname: &str) -> Option<&'lua mut T> {
     mem::transmute(self.test_userdata(arg, tname))
   }
@@ -1126,7 +1126,7 @@ impl<'lua> State<'lua> {
   }
 
   /// Convenience function that calls `check_userdata` and performs a cast.
-  #[experimental]
+  #[unstable(reason="this is an experimental function")]
   pub unsafe fn check_userdata_typed<T>(&mut self, arg: Index, tname: &str) -> &'lua mut T {
     mem::transmute(self.check_userdata(arg, tname))
   }
