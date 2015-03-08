@@ -24,6 +24,7 @@
 #![crate_type = "lib"]
 
 #![feature(unsafe_destructor)]
+#![feature(libc)]
 
 extern crate libc;
 #[macro_use]
