@@ -217,15 +217,15 @@ pub const RIDX_GLOBALS: Integer = ffi::LUA_RIDX_GLOBALS;
 
 /// Wraps a `lua_State`.
 #[allow(non_snake_case)]
-pub struct State<'lua> {
+pub struct State {
   L: *mut lua_State,
   owned: bool
 }
 
-impl<'lua> State<'lua> {
+impl State {
   /// Initializes a new Lua state. This function does not open any libraries
   /// by default. Calls `luaL_newstate` internally.
-  pub fn new() -> State<'lua> {
+  pub fn new() -> State {
     let state = unsafe { ffi::luaL_newstate() };
     State { L: state, owned: true }
   }
@@ -233,7 +233,7 @@ impl<'lua> State<'lua> {
   /// Constructs a wrapper `State` from a raw pointer. This is suitable for use
   /// inside of native functions that accept a `lua_State` to obtain a wrapper.
   #[allow(non_snake_case)]
-  pub fn from_ptr(L: *mut lua_State) -> State<'lua> {
+  pub fn from_ptr(L: *mut lua_State) -> State {
     State { L: L, owned: false }
   }
 
@@ -439,7 +439,7 @@ impl<'lua> State<'lua> {
 
   /// Convenience function that calls `to_userdata` and performs a cast.
   #[unstable(reason="this is an experimental function")]
-  pub unsafe fn to_userdata_typed<T>(&mut self, index: Index) -> Option<&'lua mut T> {
+  pub unsafe fn to_userdata_typed<'a, T>(&'a mut self, index: Index) -> Option<&'a mut T> {
     mem::transmute(self.to_userdata(index))
   }
 
@@ -1115,7 +1115,7 @@ impl<'lua> State<'lua> {
 
   /// Convenience function that calls `test_userdata` and performs a cast.
   #[unstable(reason="this is an experimental function")]
-  pub unsafe fn test_userdata_typed<T>(&mut self, arg: Index, tname: &str) -> Option<&'lua mut T> {
+  pub unsafe fn test_userdata_typed<'a, T>(&'a mut self, arg: Index, tname: &str) -> Option<&'a mut T> {
     mem::transmute(self.test_userdata(arg, tname))
   }
 
@@ -1127,7 +1127,7 @@ impl<'lua> State<'lua> {
 
   /// Convenience function that calls `check_userdata` and performs a cast.
   #[unstable(reason="this is an experimental function")]
-  pub unsafe fn check_userdata_typed<T>(&mut self, arg: Index, tname: &str) -> &'lua mut T {
+  pub unsafe fn check_userdata_typed<'a, T>(&'a mut self, arg: Index, tname: &str) -> &'a mut T {
     mem::transmute(self.check_userdata(arg, tname))
   }
 
@@ -1345,8 +1345,7 @@ impl<'lua> State<'lua> {
   // TODO: omitted: buffer functions
 }
 
-#[unsafe_destructor]
-impl<'lua> Drop for State<'lua> {
+impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
       self.close();
