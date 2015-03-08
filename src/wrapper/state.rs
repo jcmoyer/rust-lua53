@@ -249,7 +249,7 @@ impl State {
 
   /// Maps to `luaL_dofile`.
   pub fn do_file(&mut self, filename: &str) -> ThreadStatus {
-    let c_str = CString::from_slice(filename.as_bytes());
+    let c_str = CString::new(filename).unwrap();
     let result = unsafe {
       ffi::luaL_dofile(self.L, c_str.as_ptr())
     };
@@ -258,7 +258,7 @@ impl State {
 
   /// Maps to `luaL_dostring`.
   pub fn do_string(&mut self, s: &str) -> ThreadStatus {
-    let c_str = CString::from_slice(s.as_bytes());
+    let c_str = CString::new(s).unwrap();
     let result = unsafe {
       ffi::luaL_dostring(self.L, c_str.as_ptr())
     };
@@ -501,7 +501,7 @@ impl State {
   /// Maps to `lua_pushstring`.
   pub fn push_string(&mut self, s: &str) -> CString {
     unsafe {
-      let c_str = CString::from_slice(s.as_bytes());
+      let c_str = CString::new(s).unwrap();
       ffi::lua_pushstring(self.L, c_str.as_ptr());
       c_str
     }
@@ -539,7 +539,7 @@ impl State {
   //===========================================================================
   /// Maps to `lua_getglobal`.
   pub fn get_global(&mut self, name: &str) -> Type {
-    let c_str = CString::from_slice(name.as_bytes());
+    let c_str = CString::new(name).unwrap();
     let ty = unsafe {
       ffi::lua_getglobal(self.L, c_str.as_ptr())
     };
@@ -554,7 +554,7 @@ impl State {
 
   /// Maps to `lua_getfield`.
   pub fn get_field(&mut self, index: Index, k: &str) -> Type {
-    let c_str = CString::from_slice(k.as_bytes());
+    let c_str = CString::new(k).unwrap();
     let ty = unsafe {
       ffi::lua_getfield(self.L, index, c_str.as_ptr())
     };
@@ -630,7 +630,7 @@ impl State {
   //===========================================================================
   /// Maps to `lua_setglobal`.
   pub fn set_global(&mut self, var: &str) {
-    let c_str = CString::from_slice(var.as_bytes());
+    let c_str = CString::new(var).unwrap();
     unsafe { ffi::lua_setglobal(self.L, c_str.as_ptr()) }
   }
 
@@ -641,7 +641,7 @@ impl State {
 
   /// Maps to `lua_setfield`.
   pub fn set_field(&mut self, idx: Index, k: &str) {
-    let c_str = CString::from_slice(k.as_bytes());
+    let c_str = CString::new(k).unwrap();
     unsafe { ffi::lua_setfield(self.L, idx, c_str.as_ptr()) }
   }
 
@@ -707,8 +707,8 @@ impl State {
   // TODO: mode typing?
   /// Maps to `lua_load`.
   pub fn load(&mut self, reader: Reader, data: *mut c_void, source: &str, mode: &str) -> ThreadStatus {
-    let source_c_str = CString::from_slice(source.as_bytes());
-    let mode_c_str = CString::from_slice(mode.as_bytes());
+    let source_c_str = CString::new(source).unwrap();
+    let mode_c_str = CString::new(mode).unwrap();
     let result = unsafe {
       ffi::lua_load(self.L, reader, data, source_c_str.as_ptr(), mode_c_str.as_ptr())
     };
@@ -792,7 +792,7 @@ impl State {
 
   /// Maps to `lua_stringtonumber`.
   pub fn string_to_number(&mut self, s: &str) -> size_t {
-    let c_str = CString::from_slice(s.as_bytes());
+    let c_str = CString::new(s).unwrap();
     unsafe { ffi::lua_stringtonumber(self.L, c_str.as_ptr()) }
   }
 
@@ -834,7 +834,7 @@ impl State {
 
   /// Maps to `lua_register`.
   pub fn register(&mut self, n: &str, f: Function) {
-    let c_str = CString::from_slice(n.as_bytes());
+    let c_str = CString::new(n).unwrap();
     unsafe { ffi::lua_register(self.L, c_str.as_ptr(), f) }
   }
 
@@ -935,7 +935,7 @@ impl State {
   /// Maps to `lua_getinfo`.
   pub fn get_info(&mut self, what: &str) -> Option<lua_Debug> {
     let mut ar: lua_Debug = unsafe { mem::uninitialized() };
-    let c_str = CString::from_slice(what.as_bytes());
+    let c_str = CString::new(what).unwrap();
     let result = unsafe { ffi::lua_getinfo(self.L, c_str.as_ptr(), &mut ar) };
     if result == 0 {
       None
@@ -1029,7 +1029,7 @@ impl State {
 
   /// Maps to `luaL_getmetafield`.
   pub fn get_metafield(&mut self, obj: Index, e: &str) -> bool {
-    let c_str = CString::from_slice(e.as_bytes());
+    let c_str = CString::new(e).unwrap();
     let result = unsafe {
       ffi::luaL_getmetafield(self.L, obj, c_str.as_ptr())
     };
@@ -1038,7 +1038,7 @@ impl State {
 
   /// Maps to `luaL_callmeta`.
   pub fn call_meta(&mut self, obj: Index, e: &str) -> bool {
-    let c_str = CString::from_slice(e.as_bytes());
+    let c_str = CString::new(e).unwrap();
     let result = unsafe {
       ffi::luaL_callmeta(self.L, obj, c_str.as_ptr())
     };
@@ -1049,7 +1049,7 @@ impl State {
 
   /// Maps to `luaL_argerror`.
   pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> c_int {
-    let c_str = CString::from_slice(extramsg.as_bytes());
+    let c_str = CString::new(extramsg).unwrap();
     unsafe { ffi::luaL_argerror(self.L, arg, c_str.as_ptr()) }
   }
 
@@ -1078,7 +1078,7 @@ impl State {
 
   /// Maps to `luaL_checkstack`.
   pub fn check_stack_msg(&mut self, sz: c_int, msg: &str) {
-    let c_str = CString::from_slice(msg.as_bytes());
+    let c_str = CString::new(msg).unwrap();
     unsafe { ffi::luaL_checkstack(self.L, sz, c_str.as_ptr()) }
   }
 
@@ -1094,7 +1094,7 @@ impl State {
 
   /// Maps to `luaL_newmetatable`.
   pub fn new_metatable(&mut self, tname: &str) -> bool {
-    let c_str = CString::from_slice(tname.as_bytes());
+    let c_str = CString::new(tname).unwrap();
     let result = unsafe {
       ffi::luaL_newmetatable(self.L, c_str.as_ptr())
     };
@@ -1103,13 +1103,13 @@ impl State {
 
   /// Maps to `luaL_setmetatable`.
   pub fn set_metatable_from_registry(&mut self, tname: &str) {
-    let c_str = CString::from_slice(tname.as_bytes());
+    let c_str = CString::new(tname).unwrap();
     unsafe { ffi::luaL_setmetatable(self.L, c_str.as_ptr()) }
   }
 
   /// Maps to `luaL_testudata`.
   pub fn test_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
-    let c_str = CString::from_slice(tname.as_bytes());
+    let c_str = CString::new(tname).unwrap();
     unsafe { ffi::luaL_testudata(self.L, arg, c_str.as_ptr()) }
   }
 
@@ -1121,7 +1121,7 @@ impl State {
 
   /// Maps to `luaL_checkudata`.
   pub fn check_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
-    let c_str = CString::from_slice(tname.as_bytes());
+    let c_str = CString::new(tname).unwrap();
     unsafe { ffi::luaL_checkudata(self.L, arg, c_str.as_ptr()) }
   }
 
@@ -1143,14 +1143,14 @@ impl State {
     use std::vec::Vec;
     use libc::c_char;
     let mut vec: Vec<*const c_char> = Vec::with_capacity(lst.len() + 1);
-    let cstrs: Vec<CString> = lst.iter().map(|ent| CString::from_slice(ent.as_bytes())).collect();
+    let cstrs: Vec<CString> = lst.iter().map(|ent| CString::new(*ent).unwrap()).collect();
     for ent in cstrs.iter() {
       vec.push(ent.as_ptr());
     }
     vec.push(ptr::null());
     let result = match def {
       Some(def) => unsafe {
-        let c_str = CString::from_slice(def.as_bytes());
+        let c_str = CString::new(def).unwrap();
         ffi::luaL_checkoption(self.L, arg, c_str.as_ptr(), vec.as_ptr())
       },
       None      => unsafe {
@@ -1162,7 +1162,7 @@ impl State {
 
   /// Maps to `luaL_fileresult`.
   pub fn file_result(&mut self, stat: c_int, fname: &str) -> c_int {
-    let c_str = CString::from_slice(fname.as_bytes());
+    let c_str = CString::new(fname).unwrap();
     unsafe { ffi::luaL_fileresult(self.L, stat, c_str.as_ptr()) }
   }
 
@@ -1185,8 +1185,8 @@ impl State {
   /// Maps to `luaL_loadfilex`.
   pub fn load_filex(&mut self, filename: &str, mode: &str) -> ThreadStatus {
     let result = unsafe {
-      let filename_c_str = CString::from_slice(filename.as_bytes());
-      let mode_c_str = CString::from_slice(mode.as_bytes());
+      let filename_c_str = CString::new(filename).unwrap();
+      let mode_c_str = CString::new(mode).unwrap();
       ffi::luaL_loadfilex(self.L, filename_c_str.as_ptr(), mode_c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
@@ -1194,7 +1194,7 @@ impl State {
 
   /// Maps to `luaL_loadfile`.
   pub fn load_file(&mut self, filename: &str) -> ThreadStatus {
-    let c_str = CString::from_slice(filename.as_bytes());
+    let c_str = CString::new(filename).unwrap();
     let result = unsafe {
       ffi::luaL_loadfile(self.L, c_str.as_ptr())
     };
@@ -1203,16 +1203,16 @@ impl State {
 
   /// Maps to `luaL_loadbufferx`.
   pub fn load_bufferx(&mut self, buff: &str, sz: size_t, name: &str, mode: &str) -> ThreadStatus {
-    let buff_c_str = CString::from_slice(buff.as_bytes());
-    let name_c_str = CString::from_slice(name.as_bytes());
-    let mode_c_str = CString::from_slice(mode.as_bytes());
+    let buff_c_str = CString::new(buff).unwrap();
+    let name_c_str = CString::new(name).unwrap();
+    let mode_c_str = CString::new(mode).unwrap();
     let result = unsafe { ffi::luaL_loadbufferx(self.L, buff_c_str.as_ptr(), sz, name_c_str.as_ptr(), mode_c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Maps to `luaL_loadstring`.
   pub fn load_string(&mut self, source: &str) -> ThreadStatus {
-    let c_str = CString::from_slice(source.as_bytes());
+    let c_str = CString::new(source).unwrap();
     let result = unsafe { ffi::luaL_loadstring(self.L, c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -1226,9 +1226,9 @@ impl State {
 
   /// Maps to `luaL_gsub`.
   pub fn gsub(&mut self, s: &str, p: &str, r: &str) -> String {
-    let s_c_str = CString::from_slice(s.as_bytes());
-    let p_c_str = CString::from_slice(p.as_bytes());
-    let r_c_str = CString::from_slice(r.as_bytes());
+    let s_c_str = CString::new(s).unwrap();
+    let p_c_str = CString::new(p).unwrap();
+    let r_c_str = CString::new(r).unwrap();
     let ptr = unsafe {
       ffi::luaL_gsub(self.L, s_c_str.as_ptr(), p_c_str.as_ptr(), r_c_str.as_ptr())
     };
@@ -1240,7 +1240,7 @@ impl State {
   pub fn set_fns(&mut self, l: &[(&str, Function)], nup: c_int) {
     use std::vec::Vec;
     let mut reg: Vec<ffi::luaL_Reg> = Vec::with_capacity(l.len() + 1);
-    let ents: Vec<(CString, Function)> = l.iter().map(|&(s, f)| (CString::from_slice(s.as_bytes()), f)).collect();
+    let ents: Vec<(CString, Function)> = l.iter().map(|&(s, f)| (CString::new(s).unwrap(), f)).collect();
     for &(ref s, f) in ents.iter() {
       reg.push(ffi::luaL_Reg {
         name: s.as_ptr(),
@@ -1253,7 +1253,7 @@ impl State {
 
   /// Maps to `luaL_getsubtable`.
   pub fn get_subtable(&mut self, idx: Index, fname: &str) -> bool {
-    let c_str = CString::from_slice(fname.as_bytes());
+    let c_str = CString::new(fname).unwrap();
     let result = unsafe {
       ffi::luaL_getsubtable(self.L, idx, c_str.as_ptr())
     };
@@ -1262,13 +1262,13 @@ impl State {
 
   /// Maps to `luaL_traceback`.
   pub fn traceback(&mut self, state: &mut State, msg: &str, level: c_int) {
-    let c_str = CString::from_slice(msg.as_bytes());
+    let c_str = CString::new(msg).unwrap();
     unsafe { ffi::luaL_traceback(self.L, state.L, c_str.as_ptr(), level) }
   }
 
   /// Maps to `luaL_requiref`.
   pub fn requiref(&mut self, modname: &str, openf: Function, glb: bool) {
-    let c_str = CString::from_slice(modname.as_bytes());
+    let c_str = CString::new(modname).unwrap();
     unsafe { ffi::luaL_requiref(self.L, c_str.as_ptr(), openf, glb as c_int) }
   }
 
@@ -1286,7 +1286,7 @@ impl State {
 
   /// Maps to `luaL_argcheck`.
   pub fn arg_check(&mut self, cond: bool, arg: Index, extramsg: &str) {
-    let c_str = CString::from_slice(extramsg.as_bytes());
+    let c_str = CString::new(extramsg).unwrap();
     unsafe {
       ffi::luaL_argcheck(self.L, cond as c_int, arg, c_str.as_ptr())
     }
@@ -1301,7 +1301,7 @@ impl State {
 
   /// Maps to `luaL_optstring`.
   pub fn opt_string<'a>(&mut self, n: Index, default: &'a str) -> CowString<'a> {
-    let c_str = CString::from_slice(default.as_bytes());
+    let c_str = CString::new(default).unwrap();
     let ptr = unsafe { ffi::luaL_optstring(self.L, n, c_str.as_ptr()) };
     if ptr == c_str.as_ptr() {
       Cow::Borrowed(default)
@@ -1328,7 +1328,7 @@ impl State {
 
   /// Maps to `luaL_getmetatable`.
   pub fn get_metatable_from_registry(&mut self, tname: &str) {
-    let c_str = CString::from_slice(tname.as_bytes());
+    let c_str = CString::new(tname).unwrap();
     unsafe { ffi::luaL_getmetatable(self.L, c_str.as_ptr()) }
   }
 
@@ -1336,8 +1336,8 @@ impl State {
 
   /// Maps to `luaL_loadbuffer`.
   pub fn load_buffer(&mut self, buff: &str, sz: size_t, name: &str) -> ThreadStatus {
-    let buff_c_str = CString::from_slice(buff.as_bytes());
-    let name_c_str = CString::from_slice(name.as_bytes());
+    let buff_c_str = CString::new(buff).unwrap();
+    let name_c_str = CString::new(name).unwrap();
     let result = unsafe { ffi::luaL_loadbuffer(self.L, buff_c_str.as_ptr(), sz, name_c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
