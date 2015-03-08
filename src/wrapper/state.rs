@@ -41,7 +41,6 @@ use std::mem;
 use std::ptr;
 use std::str;
 use std::ffi::{CString, CStr};
-use std::string::CowString;
 use std::borrow::Cow;
 use std::borrow::ToOwned;
 use super::convert::{ToLua, FromLua};
@@ -1300,7 +1299,7 @@ impl State {
   }
 
   /// Maps to `luaL_optstring`.
-  pub fn opt_string<'a>(&mut self, n: Index, default: &'a str) -> CowString<'a> {
+  pub fn opt_string<'a>(&mut self, n: Index, default: &'a str) -> Cow<'a, str> {
     let c_str = CString::new(default).unwrap();
     let ptr = unsafe { ffi::luaL_optstring(self.L, n, c_str.as_ptr()) };
     if ptr == c_str.as_ptr() {
