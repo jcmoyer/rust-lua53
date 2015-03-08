@@ -356,7 +356,7 @@ pub unsafe fn lua_isnoneornil(L: *mut lua_State, n: c_int) -> c_int {
 pub unsafe fn lua_pushliteral(L: *mut lua_State, s: &'static str) -> *const c_char {
   use std::ffi::CString;
   let c_str = CString::from_slice(s.as_bytes());
-  lua_pushlstring(L, c_str.as_ptr(), c_str.len() as size_t)
+  lua_pushlstring(L, c_str.as_ptr(), c_str.as_bytes().len() as size_t)
 }
 
 #[inline(always)]
