@@ -40,7 +40,7 @@ use libc::{c_int, c_void, size_t};
 use std::mem;
 use std::ptr;
 use std::str;
-use std::ffi::{CString, c_str_to_bytes};
+use std::ffi::{CString, CStr};
 use std::string::CowString;
 use std::borrow::Cow;
 use std::borrow::ToOwned;
@@ -386,7 +386,7 @@ impl State {
   pub fn typename_of(&mut self, tp: Type) -> String {
     unsafe {
       let ptr = ffi::lua_typename(self.L, tp as c_int);
-      let slice = c_str_to_bytes(&ptr);
+      let slice = CStr::from_ptr(ptr).to_bytes();
       str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
     }
   }
@@ -898,7 +898,7 @@ impl State {
     if ptr.is_null() {
       None
     } else {
-      let slice = unsafe { c_str_to_bytes(&ptr) };
+      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
       str::from_utf8(slice).map(|s| s.to_owned()).ok()
     }
   }
@@ -950,7 +950,7 @@ impl State {
     if ptr.is_null() {
       None
     } else {
-      let slice = unsafe { c_str_to_bytes(&ptr) };
+      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
       str::from_utf8(slice).map(|s| s.to_owned()).ok()
     }
   }
@@ -961,7 +961,7 @@ impl State {
     if ptr.is_null() {
       None
     } else {
-      let slice = unsafe { c_str_to_bytes(&ptr) };
+      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
       str::from_utf8(slice).map(|s| s.to_owned()).ok()
     }
   }
@@ -972,7 +972,7 @@ impl State {
     if ptr.is_null() {
       None
     } else {
-      let slice = unsafe { c_str_to_bytes(&ptr) };
+      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
       str::from_utf8(slice).map(|s| s.to_owned()).ok()
     }
   }
@@ -983,7 +983,7 @@ impl State {
     if ptr.is_null() {
       None
     } else {
-      let slice = unsafe { c_str_to_bytes(&ptr) };
+      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
       str::from_utf8(slice).map(|s| s.to_owned()).ok()
     }
   }
@@ -1232,7 +1232,7 @@ impl State {
     let ptr = unsafe {
       ffi::luaL_gsub(self.L, s_c_str.as_ptr(), p_c_str.as_ptr(), r_c_str.as_ptr())
     };
-    let slice = unsafe { c_str_to_bytes(&ptr) };
+    let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
     str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
   }
 
@@ -1295,7 +1295,7 @@ impl State {
   /// Maps to `luaL_checkstring`.
   pub fn check_string(&mut self, n: Index) -> String {
     let ptr = unsafe { ffi::luaL_checkstring(self.L, n) };
-    let slice = unsafe { c_str_to_bytes(&ptr) };
+    let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
     str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
   }
 
@@ -1306,7 +1306,7 @@ impl State {
     if ptr == c_str.as_ptr() {
       Cow::Borrowed(default)
     } else {
-      let slice = unsafe { c_str_to_bytes(&ptr) };
+      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
       let string = str::from_utf8(slice).map(|s| s.to_owned()).unwrap();
       Cow::Owned(string)
     }
@@ -1320,7 +1320,7 @@ impl State {
   /// Maps to `luaL_typename`.
   pub fn typename_at(&mut self, n: Index) -> String {
     let ptr = unsafe { ffi::luaL_typename(self.L, n) };
-    let slice = unsafe { c_str_to_bytes(&ptr) };
+    let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
     str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
   }
 
