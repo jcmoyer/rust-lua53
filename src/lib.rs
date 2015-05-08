@@ -23,8 +23,7 @@
 #![crate_name = "lua"]
 #![crate_type = "lib"]
 
-#![feature(unsafe_destructor)]
-#![feature(libc, core)]
+#![feature(libc, convert)]
 
 extern crate libc;
 #[macro_use]

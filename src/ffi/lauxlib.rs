@@ -40,7 +40,6 @@ pub struct luaL_Reg {
   pub func: lua_CFunction,
 }
 
-impl Copy for luaL_Reg {}
 
 #[inline(always)]
 pub unsafe fn luaL_checkversion(L: *mut lua_State) {
@@ -154,25 +153,25 @@ pub unsafe fn luaL_optstring(L: *mut lua_State, n: c_int, d: *const c_char) -> *
 // lua_Integer with a type cast (or, when possible, use lua_Integer in your
 // code).
 #[inline(always)]
-#[deprecated]
+//#[deprecated]
 pub unsafe fn luaL_checkint(L: *mut lua_State, n: c_int) -> c_int {
   luaL_checkinteger(L, n) as c_int
 }
 
 #[inline(always)]
-#[deprecated]
+//#[deprecated]
 pub unsafe fn luaL_optint(L: *mut lua_State, n: c_int, d: c_int) -> c_int {
   luaL_optinteger(L, n, d as lua_Integer) as c_int
 }
 
 #[inline(always)]
-#[deprecated]
+//#[deprecated]
 pub unsafe fn luaL_checklong(L: *mut lua_State, n: c_int) -> c_long {
   luaL_checkinteger(L, n) as c_long
 }
 
 #[inline(always)]
-#[deprecated]
+//#[deprecated]
 pub unsafe fn luaL_optlong(L: *mut lua_State, n: c_int, d: c_long) -> c_long {
   luaL_optinteger(L, n, d as lua_Integer) as c_long
 }
@@ -223,8 +222,6 @@ pub struct luaL_Buffer {
   pub initb: [c_char; LUAL_BUFFERSIZE as usize]
 }
 
-impl Copy for luaL_Buffer {}
-
 // TODO: Test this thoroughly
 #[inline(always)]
 pub unsafe fn luaL_addchar(B: *mut luaL_Buffer, c: c_char) {
@@ -263,7 +260,5 @@ pub struct luaL_Stream {
   pub f: *mut ::libc::FILE,
   pub closef: lua_CFunction
 }
-
-impl Copy for luaL_Stream {}
 
 // omitted: old module system compatibility

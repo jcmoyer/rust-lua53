@@ -22,6 +22,7 @@
 
 #![crate_name="mathx"]
 #![crate_type="dylib"]
+#![feature(libc)]
 
 extern crate libc;
 extern crate lua;
@@ -35,9 +36,6 @@ use lua::{State, Function};
 
 // import c_int since we need this to interface with Lua
 use libc::c_int;
-
-// sin/cos/tan
-use std::num::Float;
 
 // simple binding to Rust's sin function
 #[allow(non_snake_case)]

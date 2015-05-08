@@ -439,4 +439,3 @@ pub struct lua_Debug {
   i_ci: *mut c_void,
 }
 
-impl Copy for lua_Debug {}

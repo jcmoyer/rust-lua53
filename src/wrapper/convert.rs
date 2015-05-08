@@ -41,7 +41,7 @@ impl<'a> ToLua for &'a str {
 
 impl ToLua for String {
   fn to_lua(&self, state: &mut State) {
-    state.push_string(self.as_slice());
+    state.push_string(self.as_str());
   }
 }
 
@@ -69,14 +69,14 @@ impl ToLua for Function {
   }
 }
 
-#[unstable(reason="this is an experimental trait")]
+//#[unstable(reason="this is an experimental trait")]
 impl<T> ToLua for *mut T {
   fn to_lua(&self, state: &mut State) {
     unsafe { state.push_light_userdata(*self) }
   }
 }
 
-#[unstable(reason="this is an experimental trait")]
+//#[unstable(reason="this is an experimental trait")]
 impl<T: ToLua> ToLua for Option<T> {
   fn to_lua(&self, state: &mut State) {
     match *self {
@@ -132,7 +132,7 @@ impl FromLua for bool {
   }
 }
 
-#[unstable(reason="this is an experimental trait")]
+//#[unstable(reason="this is an experimental trait")]
 impl FromLua for Function {
   fn from_lua(state: &mut State) -> Option<Function> {
     if state.is_native_fn(-1) {
