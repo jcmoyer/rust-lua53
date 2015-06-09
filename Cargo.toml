@@ -15,4 +15,4 @@ build = "build.rs"
 
 [dependencies]
 bitflags = "0.1"
-
+libc = "*"
