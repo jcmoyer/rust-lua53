@@ -36,10 +36,11 @@
 use ffi;
 use ffi::{lua_State, lua_Debug};
 
-use libc::{c_int, c_void, size_t};
+use libc::{c_char, c_int, c_void, size_t};
 use std::mem;
 use std::ptr;
 use std::str;
+use std::slice;
 use std::ffi::{CString, CStr};
 use std::borrow::Cow;
 use std::borrow::ToOwned;
@@ -244,6 +245,26 @@ impl State {
   /// Maps to `luaL_openlibs`.
   pub fn open_libs(&mut self) {
     unsafe { ffi::luaL_openlibs(self.L) }
+  }
+
+  /// Maps to `luaopen_base`.
+  pub fn open_base(&mut self) -> c_int {
+    unsafe { ffi::luaopen_base(self.L) }
+  }
+
+  /// Maps to `luaopen_string`.
+  pub fn open_string(&mut self) -> c_int {
+    unsafe { ffi::luaopen_string(self.L) }
+  }
+
+  /// Maps to `luaopen_table`.
+  pub fn open_table(&mut self) -> c_int {
+    unsafe { ffi::luaopen_table(self.L) }
+  }
+
+  /// Maps to `luaopen_debug`.
+  pub fn open_debug(&mut self) -> c_int {
+    unsafe { ffi::luaopen_debug(self.L) }
   }
 
   /// Maps to `luaL_dofile`.
@@ -769,7 +790,7 @@ impl State {
   // Miscellaneous functions
   //===========================================================================
   /// Maps to `lua_error`.
-  pub fn error(&mut self) -> c_int {
+  pub fn error(&mut self) -> ! {
     unsafe { ffi::lua_error(self.L) }
   }
 
@@ -900,6 +921,25 @@ impl State {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
       str::from_utf8(slice).map(|s| s.to_owned()).ok()
     }
+  }
+
+  pub fn push_lstring(&mut self, s: &str) -> *const c_char {
+    #![inline]
+    unsafe { ffi::lua_pushlstring(self.L, s.as_ptr() as *const c_char, s.len() as size_t) }
+  }
+
+  pub fn to_lstring<'a>(&'a mut self, idx: Index) -> Option<&'a str> {
+    #![inline]
+    {
+      let mut sz: size_t = 0;
+      let s = unsafe { ffi::lua_tolstring(self.L, idx, &mut sz) };
+      if s.is_null() {
+        None
+      } else {
+        let buf = s as *const u8;
+        Some(unsafe { slice::from_raw_parts(buf, sz as usize) })
+      }
+    }.and_then(|v| str::from_utf8(v).ok())
   }
 
   /// Maps to `lua_insert`.
@@ -1335,9 +1375,9 @@ impl State {
 
   /// Maps to `luaL_loadbuffer`.
   pub fn load_buffer(&mut self, buff: &str, sz: size_t, name: &str) -> ThreadStatus {
-    let buff_c_str = CString::new(buff).unwrap();
+    let bp = buff.as_ptr() as *const c_char;
     let name_c_str = CString::new(name).unwrap();
-    let result = unsafe { ffi::luaL_loadbuffer(self.L, buff_c_str.as_ptr(), sz, name_c_str.as_ptr()) };
+    let result = unsafe { ffi::luaL_loadbuffer(self.L, bp, sz, name_c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
