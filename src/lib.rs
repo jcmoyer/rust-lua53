@@ -59,18 +59,5 @@ pub use wrapper::state::{
   RIDX_MAINTHREAD, RIDX_GLOBALS
 };
 
-#[cfg(target_os="windows")]
-mod windows {
-  #[link(name="lua53")]
-  extern {}
-}
-
-#[cfg(not(target_os="windows"))]
-mod unix {
-  #[link(name="lua")]
-  extern {}
-}
-
 pub mod ffi;
 pub mod wrapper;
-

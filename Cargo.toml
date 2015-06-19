@@ -12,6 +12,7 @@ keywords = [
 ]
 license = "MIT"
 build = "build.rs"
+links = "lua"
 
 [dependencies]
 bitflags = "0.1"

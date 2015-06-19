@@ -808,7 +808,7 @@ impl State {
   //===========================================================================
   // Some useful macros (here implemented as functions)
   //===========================================================================
-  
+
   // omitted: lua_getextraspace
 
   /// Maps to `lua_tonumber`.
@@ -1351,4 +1351,3 @@ impl Drop for State {
     }
   }
 }
-
