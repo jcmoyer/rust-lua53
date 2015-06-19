@@ -1,5 +1,4 @@
 [package]
-
 name = "lua"
 version = "0.0.7"
 authors = ["J.C. Moyer"]
@@ -12,6 +11,7 @@ keywords = [
 ]
 license = "MIT"
 build = "build.rs"
+links = "lua5.3"
 
 [dependencies]
 bitflags = "0.1"
