@@ -33,19 +33,6 @@ Add this to your `Cargo.toml`:
 git = "https://github.com/jcmoyer/rust-lua53"
 ```
 
-### Manual
-
-If for some reason you're not using cargo (perhaps in Lua spirit!), you can
-clone this repository and build it yourself:
-
-```
-git clone https://github.com/jcmoyer/rust-lua53.git
-cd rust-lua53
-chmod +x ./prebuild.sh
-./prebuild.sh
-rustc src/lib.rs
-```
-
 # Example
 
 ```rust
@@ -61,4 +48,3 @@ fn main() {
 # License
 Licensed under the MIT License, which is the same license Lua is distributed
 under. Refer to `LICENSE.md` for more information.
-

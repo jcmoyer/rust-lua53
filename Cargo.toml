@@ -1,5 +1,4 @@
 [package]
-
 name = "lua"
 version = "0.0.7"
 authors = ["J.C. Moyer"]
@@ -16,3 +15,5 @@ build = "build.rs"
 [dependencies]
 bitflags = "0.1"
 
+[build-dependencies]
+pkg-config = "0.3.5"
