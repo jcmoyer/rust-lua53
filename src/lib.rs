@@ -65,12 +65,5 @@ mod windows {
   extern {}
 }
 
-#[cfg(not(target_os="windows"))]
-mod unix {
-  #[link(name="lua")]
-  extern {}
-}
-
 pub mod ffi;
 pub mod wrapper;
-
