@@ -10,8 +10,6 @@ install:
   - sed -i '/MYCFLAGS=/c\MYCFLAGS=-fPIC' src/Makefile
   - make linux && sudo make install
   - cd -
-  - chmod +x ./prebuild.sh
-  - ./prebuild.sh
 script:
   - cargo build --verbose
   - cargo test --verbose
