@@ -4,6 +4,11 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[cfg(target_os="windows")]
+fn build_lua() -> io::Result<()> {
+    run_command_in_dir(&["make", "mingw"], Some(&build_dir().join("lua-5.3.0")))
+}
+
 /// The comand to build lua, specialized for different OSes.
 #[cfg(target_os="macos")]
 fn build_lua() -> io::Result<()> {
