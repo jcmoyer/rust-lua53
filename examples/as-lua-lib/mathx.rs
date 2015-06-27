@@ -39,7 +39,7 @@ use libc::c_int;
 
 // simple binding to Rust's sin function
 #[allow(non_snake_case)]
-extern "C" fn sin(L: *mut lua_State) -> c_int {
+unsafe extern "C" fn sin(L: *mut lua_State) -> c_int {
   let mut state = State::from_ptr(L);
   // convert the value on top of the stack to a number
   let num = state.to_number(-1);
@@ -51,7 +51,7 @@ extern "C" fn sin(L: *mut lua_State) -> c_int {
 
 // simple binding to Rust's cos function
 #[allow(non_snake_case)]
-extern "C" fn cos(L: *mut lua_State) -> c_int {
+unsafe extern "C" fn cos(L: *mut lua_State) -> c_int {
   let mut state = State::from_ptr(L);
   let num = state.to_number(-1);
   state.push_number(num.cos());
@@ -60,7 +60,7 @@ extern "C" fn cos(L: *mut lua_State) -> c_int {
 
 // simple binding to Rust's tan function
 #[allow(non_snake_case)]
-extern "C" fn tan(L: *mut lua_State) -> c_int {
+unsafe extern "C" fn tan(L: *mut lua_State) -> c_int {
   let mut state = State::from_ptr(L);
   let num = state.to_number(-1);
   state.push_number(num.tan());
