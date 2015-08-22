@@ -1,0 +1,4 @@
+/Cargo.lock
+/build/
+/target/
+/src/ffi/glue.rs
