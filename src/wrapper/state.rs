@@ -1334,10 +1334,9 @@ impl State {
   // omitted: luaL_opt (undocumented function)
 
   /// Maps to `luaL_loadbuffer`.
-  pub fn load_buffer(&mut self, buff: &str, sz: size_t, name: &str) -> ThreadStatus {
-    let buff_c_str = CString::new(buff).unwrap();
+  pub fn load_buffer(&mut self, buff: &[u8], name: &str) -> ThreadStatus {
     let name_c_str = CString::new(name).unwrap();
-    let result = unsafe { ffi::luaL_loadbuffer(self.L, buff_c_str.as_ptr(), sz, name_c_str.as_ptr()) };
+    let result = unsafe { ffi::luaL_loadbuffer(self.L, buff.as_ptr() as *const _, buff.len() as u32, name_c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
