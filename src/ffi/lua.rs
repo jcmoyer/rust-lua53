@@ -29,7 +29,7 @@ use std::ptr;
 pub use super::glue::{LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_NUM, LUA_VERSION_RELEASE};
 pub use super::glue::{LUA_VERSION, LUA_RELEASE, LUA_COPYRIGHT, LUA_AUTHORS};
 
-// LUA_SIGNATURE?
+pub const LUA_SIGNATURE: &'static [u8] = b"\x1bLua";
 
 // option for multiple returns in 'lua_pcall' and 'lua_call'
 pub const LUA_MULTRET: c_int = -1;
