@@ -23,8 +23,6 @@
 #![crate_name = "lua"]
 #![crate_type = "lib"]
 
-#![feature(libc, convert)]
-
 extern crate libc;
 #[macro_use]
 extern crate bitflags;
@@ -59,5 +57,5 @@ pub use wrapper::state::{
   RIDX_MAINTHREAD, RIDX_GLOBALS
 };
 
-pub mod ffi;
-pub mod wrapper;
+mod ffi;
+mod wrapper;

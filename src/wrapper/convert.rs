@@ -41,7 +41,7 @@ impl<'a> ToLua for &'a str {
 
 impl ToLua for String {
   fn to_lua(&self, state: &mut State) {
-    state.push_string(self.as_str());
+    state.push_string(&self);
   }
 }
 
