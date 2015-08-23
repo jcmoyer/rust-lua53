@@ -27,7 +27,7 @@ extern crate libc;
 #[macro_use]
 extern crate bitflags;
 
-pub use wrapper::state::{
+pub use state::{
   State,
 
   Number,
@@ -57,5 +57,11 @@ pub use wrapper::state::{
   RIDX_MAINTHREAD, RIDX_GLOBALS
 };
 
+pub use convert::{
+  ToLua,
+  FromLua
+};
+
 mod ffi;
-mod wrapper;
+mod convert;
+mod state;
