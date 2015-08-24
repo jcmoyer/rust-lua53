@@ -106,6 +106,20 @@ impl ThreadStatus {
       _ => None
     }
   }
+
+  /// Returns `true` for error statuses and `false` for `Ok` and `Yield`.
+  pub fn is_err(self) -> bool {
+    match self {
+      ThreadStatus::RuntimeError |
+      ThreadStatus::SyntaxError |
+      ThreadStatus::MemoryError |
+      ThreadStatus::GcError |
+      ThreadStatus::MessageHandlerError |
+      ThreadStatus::FileError => true,
+      ThreadStatus::Ok |
+      ThreadStatus::Yield => false,
+    }
+  }
 }
 
 /// Options for the Lua garbage collector.
