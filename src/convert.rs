@@ -22,7 +22,7 @@
 
 //! Implements conversions for Rust types to and from Lua.
 
-use super::state::{State, Integer, Number, Function};
+use super::{State, Integer, Number, Function};
 
 /// Trait for types that can be pushed onto the stack of a Lua state.
 ///
@@ -41,7 +41,7 @@ impl<'a> ToLua for &'a str {
 
 impl ToLua for String {
   fn to_lua(&self, state: &mut State) {
-    state.push_string(self.as_str());
+    state.push_string(&self);
   }
 }
 

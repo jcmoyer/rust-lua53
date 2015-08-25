@@ -22,8 +22,7 @@
 
 //! Low level bindings to Lua.
 
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
 
 // This is more or less in the order it appears in the Lua manual, with the
 // exception of constants, which appear scattered throughout the manual text.
@@ -294,8 +293,8 @@ pub use self::lualib::{
 };
 
 mod glue;
-pub mod luaconf;
-pub mod lua;
-pub mod lauxlib;
-pub mod lualib;
+mod luaconf;
+mod lua;
+mod lauxlib;
+mod lualib;
 

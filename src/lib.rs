@@ -23,25 +23,12 @@
 #![crate_name = "lua"]
 #![crate_type = "lib"]
 
-#![feature(libc, convert)]
-
 extern crate libc;
 #[macro_use]
 extern crate bitflags;
 
-pub use wrapper::state::{
+pub use state::{
   State,
-
-  Number,
-  Integer,
-  Function,
-  Continuation,
-  Reader,
-  Writer,
-  Context,
-  Allocator,
-  Hook,
-  Index,
 
   Arithmetic,
   Comparison,
@@ -59,5 +46,20 @@ pub use wrapper::state::{
   RIDX_MAINTHREAD, RIDX_GLOBALS
 };
 
+pub use ffi::lua_Number as Number;
+pub use ffi::lua_Integer as Integer;
+pub use ffi::lua_CFunction as Function;
+pub use ffi::lua_Alloc as Allocator;
+pub use ffi::lua_Hook as Hook;
+
+/// Integer type used to index the Lua stack, usually `i32`.
+pub type Index = libc::c_int;
+
+pub use convert::{
+  ToLua,
+  FromLua
+};
+
 pub mod ffi;
-pub mod wrapper;
+mod convert;
+mod state;
