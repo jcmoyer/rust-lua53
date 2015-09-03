@@ -23,8 +23,6 @@
 #![crate_name = "lua"]
 #![crate_type = "lib"]
 
-#![feature(convert)]
-
 extern crate libc;
 #[macro_use]
 extern crate bitflags;
