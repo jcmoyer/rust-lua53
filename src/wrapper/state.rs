@@ -279,8 +279,11 @@ impl State {
   // State manipulation
   //===========================================================================
   /// Maps to `lua_close`.
-  pub fn close(&mut self) {
-    unsafe { ffi::lua_close(self.L) }
+  pub fn close(self) {
+    // lua_close will be called in the Drop impl
+    if !self.owned {
+      panic!("cannot explicitly close non-owned Lua state")
+    }
   }
 
   /// Maps to `lua_newthread`.
@@ -1347,7 +1350,7 @@ impl State {
 impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
-      self.close();
+      unsafe { ffi::lua_close(self.L) }
     }
   }
 }
