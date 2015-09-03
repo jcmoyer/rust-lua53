@@ -22,7 +22,6 @@
 
 #![crate_name="mathx"]
 #![crate_type="dylib"]
-#![feature(libc)]
 
 extern crate libc;
 extern crate lua;
@@ -86,4 +85,3 @@ pub extern "C" fn luaopen_mathx(L: *mut lua_State) -> c_int {
   // return it on the stack
   1
 }
-
