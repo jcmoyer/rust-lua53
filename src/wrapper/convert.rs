@@ -90,7 +90,7 @@ impl<T: ToLua> ToLua for Option<T> {
 ///
 /// It is important that implementors of this trait ensure that `from_lua`
 /// behaves like one of the `lua_to*` functions for consistency.
-pub trait FromLua {
+pub trait FromLua: Sized {
   /// Converts the value on top of the stack of a Lua state to a value of type
   /// `Option<Self>`.
   fn from_lua(state: &mut State) -> Option<Self>;
@@ -142,4 +142,3 @@ impl FromLua for Function {
     }
   }
 }
-
