@@ -36,10 +36,8 @@
 use ffi;
 use ffi::{lua_State, lua_Debug};
 
-use libc::{c_int, c_void, size_t};
-use std::mem;
-use std::ptr;
-use std::str;
+use libc::{c_int, c_void, c_char, size_t};
+use std::{mem, ptr, str, slice};
 use std::ffi::{CString, CStr};
 use std::borrow::Cow;
 use std::borrow::ToOwned;
@@ -53,11 +51,6 @@ pub type Number = ffi::lua_Number;
 pub type Integer = ffi::lua_Integer;
 /// Represents a native function that can be passed to Lua.
 pub type Function = ffi::lua_CFunction;
-/// Represents a continuation function.
-pub type Continuation = ffi::lua_KFunction;
-pub type Reader = ffi::lua_Reader;
-pub type Writer = ffi::lua_Writer;
-pub type Context = ffi::lua_KContext;
 pub type Allocator = ffi::lua_Alloc;
 pub type Hook = ffi::lua_Hook;
 
@@ -227,6 +220,12 @@ pub const REGISTRYINDEX: Index = ffi::LUA_REGISTRYINDEX;
 
 pub const RIDX_MAINTHREAD: Integer = ffi::LUA_RIDX_MAINTHREAD;
 pub const RIDX_GLOBALS: Integer = ffi::LUA_RIDX_GLOBALS;
+
+unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::lua_KContext) -> c_int
+  where F: FnOnce(&mut State, ThreadStatus) -> c_int
+{
+  mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
+}
 
 /// Wraps a `lua_State`.
 #[allow(non_snake_case)]
@@ -695,8 +694,16 @@ impl State {
   // 'load' and 'call' functions (load and run Lua code)
   //===========================================================================
   /// Maps to `lua_callk`.
-  pub fn callk(&mut self, nargs: c_int, nresults: c_int, ctx: Context, k: Continuation) {
-    unsafe { ffi::lua_callk(self.L, nargs, nresults, ctx, k) }
+  pub fn callk<F>(&mut self, nargs: c_int, nresults: c_int, continuation: F)
+    where F: FnOnce(&mut State, ThreadStatus) -> c_int
+  {
+    let func = continue_func::<F>;
+    unsafe {
+      let ctx = mem::transmute(Box::new(continuation));
+      ffi::lua_callk(self.L, nargs, nresults, ctx, Some(continue_func::<F>));
+      // no yield occurred, so call the continuation
+      func(self.L, ffi::LUA_OK, ctx);
+    }
   }
 
   /// Maps to `lua_call`.
@@ -705,11 +712,15 @@ impl State {
   }
 
   /// Maps to `lua_pcallk`.
-  pub fn pcallk(&mut self, nargs: c_int, nresults: c_int, msgh: c_int, ctx: Context, k: Continuation) -> ThreadStatus {
-    let result = unsafe {
-      ffi::lua_pcallk(self.L, nargs, nresults, msgh, ctx, k)
-    };
-    ThreadStatus::from_c_int(result).unwrap()
+  pub fn pcallk<F>(&mut self, nargs: c_int, nresults: c_int, msgh: c_int, continuation: F) -> c_int
+    where F: FnOnce(&mut State, ThreadStatus) -> c_int
+  {
+    let func = continue_func::<F>;
+    unsafe {
+      let ctx = mem::transmute(Box::new(continuation));
+      // lua_pcallk only returns if no yield occurs, so call the continuation
+      func(self.L, ffi::lua_pcallk(self.L, nargs, nresults, msgh, ctx, Some(func)), ctx)
+    }
   }
 
   /// Maps to `lua_pcall`.
@@ -722,11 +733,21 @@ impl State {
 
   // TODO: mode typing?
   /// Maps to `lua_load`.
-  pub fn load(&mut self, reader: Reader, data: *mut c_void, source: &str, mode: &str) -> ThreadStatus {
+  pub fn load<F>(&mut self, mut reader: F, source: &str, mode: &str) -> ThreadStatus
+    where F: FnMut(&mut State) -> &[u8]
+  {
+    unsafe extern fn read<F>(st: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char
+      where F: FnMut(&mut State) -> &[u8]
+    {
+      let mut state = State::from_ptr(st);
+      let slice = mem::transmute::<_, &mut F>(ud)(&mut state);
+      *sz = slice.len() as size_t;
+      slice.as_ptr() as *const _
+    }
     let source_c_str = CString::new(source).unwrap();
     let mode_c_str = CString::new(mode).unwrap();
     let result = unsafe {
-      ffi::lua_load(self.L, reader, data, source_c_str.as_ptr(), mode_c_str.as_ptr())
+      ffi::lua_load(self.L, Some(read::<F>), mem::transmute(&mut reader), source_c_str.as_ptr(), mode_c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -734,22 +755,33 @@ impl State {
   // returns isize because the return value is dependent on the writer - seems to
   // be usable for anything
   /// Maps to `lua_dump`.
-  pub fn dump(&mut self, writer: Writer, data: *mut c_void, strip: bool) -> c_int {
-    unsafe { ffi::lua_dump(self.L, writer, data, strip as c_int) }
+  pub fn dump<F>(&mut self, mut writer: F, strip: bool) -> c_int
+    where F: FnMut(&mut State, &[u8]) -> c_int
+  {
+    unsafe extern fn write<F>(st: *mut lua_State, p: *const c_void, sz: size_t, ud: *mut c_void) -> c_int
+      where F: FnMut(&mut State, &[u8]) -> c_int
+    {
+      mem::transmute::<_, &mut F>(ud)(&mut State::from_ptr(st), slice::from_raw_parts(p as *const _, sz as usize))
+    }
+    unsafe { ffi::lua_dump(self.L, Some(write::<F>), mem::transmute(&mut writer), strip as c_int) }
   }
 
   //===========================================================================
   // Coroutine functions
   //===========================================================================
   /// Maps to `lua_yieldk`.
-  pub fn co_yieldk(&mut self, nresults: c_int, ctx: Context, k: Continuation) -> c_int {
-    unsafe { ffi::lua_yieldk(self.L, nresults, ctx, k) }
+  pub fn co_yieldk<F>(&mut self, nresults: c_int, continuation: F) -> !
+    where F: FnOnce(&mut State, ThreadStatus) -> c_int
+  {
+    unsafe { ffi::lua_yieldk(self.L, nresults, mem::transmute(Box::new(continuation)), Some(continue_func::<F>)) };
+    panic!("co_yieldk called in non-coroutine context; check is_yieldable first")
   }
 
   /// Maps to `lua_yield`. This function is not called `yield` because it is a
   /// reserved keyword.
-  pub fn co_yield(&mut self, nresults: c_int) -> c_int {
-    unsafe { ffi::lua_yield(self.L, nresults) }
+  pub fn co_yield(&mut self, nresults: c_int) -> ! {
+    unsafe { ffi::lua_yield(self.L, nresults) };
+    panic!("co_yield called in non-coroutine context; check is_yieldable first")
   }
 
   /// Maps to `lua_resume`.
