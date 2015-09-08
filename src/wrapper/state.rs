@@ -39,8 +39,6 @@ use ffi::{lua_State, lua_Debug};
 use libc::{c_int, c_void, c_char, size_t};
 use std::{mem, ptr, str, slice};
 use std::ffi::{CString, CStr};
-use std::borrow::Cow;
-use std::borrow::ToOwned;
 use super::convert::{ToLua, FromLua};
 
 /// Represents a Lua number. For most installations, this is a 64-bit floating
@@ -398,11 +396,11 @@ impl State {
   }
 
   /// Maps to `lua_typename`.
-  pub fn typename_of(&mut self, tp: Type) -> String {
+  pub fn typename_of(&mut self, tp: Type) -> &'static str {
     unsafe {
       let ptr = ffi::lua_typename(self.L, tp as c_int);
       let slice = CStr::from_ptr(ptr).to_bytes();
-      str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+      str::from_utf8(slice).unwrap()
     }
   }
 
@@ -511,15 +509,11 @@ impl State {
     unsafe { ffi::lua_pushinteger(self.L, i) }
   }
 
-  // omitted: lua_pushlstring
+  // omitted: lua_pushstring
 
-  /// Maps to `lua_pushstring`.
-  pub fn push_string(&mut self, s: &str) -> CString {
-    unsafe {
-      let c_str = CString::new(s).unwrap();
-      ffi::lua_pushstring(self.L, c_str.as_ptr());
-      c_str
-    }
+  /// Maps to `lua_pushlstring`.
+  pub fn push_string(&mut self, s: &str) {
+    unsafe { ffi::lua_pushlstring(self.L, s.as_ptr() as *const _, s.len() as size_t) };
   }
 
   // omitted: lua_pushvfstring
@@ -938,18 +932,7 @@ impl State {
     unsafe { ffi::lua_pushglobaltable(self.L) };
   }
 
-  /// Maps to `lua_tostring`. This function is not called `to_string` because
-  /// that method name is used for the `ToString` trait. This function makes a
-  /// copy of the string on top of the stack and returns it as an owned `String`.
-  pub fn to_str(&mut self, index: Index) -> Option<String> {
-    let ptr = unsafe { ffi::lua_tostring(self.L, index) };
-    if ptr.is_null() {
-      None
-    } else {
-      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
-    }
-  }
+  // omitted: lua_tostring
 
   /// Maps to `lua_insert`.
   pub fn insert(&mut self, idx: Index) {
@@ -993,46 +976,46 @@ impl State {
   }
 
   /// Maps to `lua_getlocal`.
-  pub fn get_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<String> {
+  pub fn get_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_getlocal(self.L, ar, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
   /// Maps to `lua_setlocal`.
-  pub fn set_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<String> {
+  pub fn set_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_setlocal(self.L, ar, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
   /// Maps to `lua_getupvalue`.
-  pub fn get_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<String> {
+  pub fn get_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_getupvalue(self.L, funcindex, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
   /// Maps to `lua_setupvalue`.
-  pub fn set_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<String> {
+  pub fn set_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_setupvalue(self.L, funcindex, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
@@ -1093,7 +1076,20 @@ impl State {
     result != 0
   }
 
-  // omitted: luaL_tolstring
+  /// Maps to `luaL_tolstring`. This function is not called `to_string` because
+  /// that method name is used for the `ToString` trait. This function returns
+  /// a reference to the string at the given index, on which `to_owned` may be
+  /// called.
+  pub fn to_str(&mut self, index: Index) -> Option<&str> {
+    let mut len = 0;
+    let ptr = unsafe { ffi::luaL_tolstring(self.L, index, &mut len) };
+    if ptr.is_null() {
+      None
+    } else {
+      let slice = unsafe { slice::from_raw_parts(ptr as *const u8, len as usize) };
+      str::from_utf8(slice).ok()
+    }
+  }
 
   /// Maps to `luaL_argerror`.
   pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> c_int {
@@ -1101,8 +1097,8 @@ impl State {
     unsafe { ffi::luaL_argerror(self.L, arg, c_str.as_ptr()) }
   }
 
-  // omitted: luaL_checklstring
-  // omitted: luaL_optlstring
+  // omitted: luaL_checkstring
+  // omitted: luaL_optstring
 
   /// Maps to `luaL_checknumber`.
   pub fn check_number(&mut self, arg: Index) -> Number {
@@ -1272,7 +1268,7 @@ impl State {
   }
 
   /// Maps to `luaL_gsub`.
-  pub fn gsub(&mut self, s: &str, p: &str, r: &str) -> String {
+  pub fn gsub(&mut self, s: &str, p: &str, r: &str) -> &str {
     let s_c_str = CString::new(s).unwrap();
     let p_c_str = CString::new(p).unwrap();
     let r_c_str = CString::new(r).unwrap();
@@ -1280,7 +1276,7 @@ impl State {
       ffi::luaL_gsub(self.L, s_c_str.as_ptr(), p_c_str.as_ptr(), r_c_str.as_ptr())
     };
     let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-    str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+    str::from_utf8(slice).unwrap()
   }
 
   /// Maps to `luaL_setfuncs`.
@@ -1339,23 +1335,24 @@ impl State {
     }
   }
 
-  /// Maps to `luaL_checkstring`.
-  pub fn check_string(&mut self, n: Index) -> String {
-    let ptr = unsafe { ffi::luaL_checkstring(self.L, n) };
-    let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-    str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+  /// Maps to `luaL_checklstring`.
+  pub fn check_string(&mut self, n: Index) -> &str {
+    let mut size = 0;
+    let ptr = unsafe { ffi::luaL_checklstring(self.L, n, &mut size) };
+    let slice = unsafe { slice::from_raw_parts(ptr as *const u8, size as usize) };
+    str::from_utf8(slice).unwrap()
   }
 
-  /// Maps to `luaL_optstring`.
-  pub fn opt_string<'a>(&mut self, n: Index, default: &'a str) -> Cow<'a, str> {
+  /// Maps to `luaL_optlstring`.
+  pub fn opt_string<'a>(&'a mut self, n: Index, default: &'a str) -> &'a str {
+    let mut size = 0;
     let c_str = CString::new(default).unwrap();
-    let ptr = unsafe { ffi::luaL_optstring(self.L, n, c_str.as_ptr()) };
+    let ptr = unsafe { ffi::luaL_optlstring(self.L, n, c_str.as_ptr(), &mut size) };
     if ptr == c_str.as_ptr() {
-      Cow::Borrowed(default)
+      default
     } else {
-      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      let string = str::from_utf8(slice).map(|s| s.to_owned()).unwrap();
-      Cow::Owned(string)
+      let slice = unsafe { slice::from_raw_parts(ptr as *const u8, size as usize) };
+      str::from_utf8(slice).unwrap()
     }
   }
 
@@ -1365,10 +1362,9 @@ impl State {
   // omitted: luaL_optlong (use .opt_integer)
 
   /// Maps to `luaL_typename`.
-  pub fn typename_at(&mut self, n: Index) -> String {
-    let ptr = unsafe { ffi::luaL_typename(self.L, n) };
-    let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-    str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+  pub fn typename_at(&mut self, n: Index) -> &'static str {
+    let typeid = self.type_of(n).unwrap();
+    self.typename_of(typeid)
   }
 
   // luaL_dofile and luaL_dostring implemented above
