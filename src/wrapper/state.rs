@@ -243,7 +243,7 @@ impl State {
   /// Constructs a wrapper `State` from a raw pointer. This is suitable for use
   /// inside of native functions that accept a `lua_State` to obtain a wrapper.
   #[allow(non_snake_case)]
-  pub fn from_ptr(L: *mut lua_State) -> State {
+  pub unsafe fn from_ptr(L: *mut lua_State) -> State {
     State { L: L, owned: false }
   }
 
@@ -299,8 +299,7 @@ impl State {
 
   /// Maps to `lua_newthread`.
   pub fn new_thread(&mut self) -> State {
-    let state = unsafe { ffi::lua_newthread(self.L) };
-    State::from_ptr(state)
+    unsafe { State::from_ptr(ffi::lua_newthread(self.L)) }
   }
 
   /// Maps to `lua_atpanic`.
@@ -462,7 +461,7 @@ impl State {
     if state.is_null() {
       None
     } else {
-      Some(State::from_ptr(state))
+      Some(unsafe { State::from_ptr(state) })
     }
   }
 
@@ -812,8 +811,9 @@ impl State {
   // Miscellaneous functions
   //===========================================================================
   /// Maps to `lua_error`.
-  pub fn error(&mut self) -> c_int {
-    unsafe { ffi::lua_error(self.L) }
+  pub fn error(&mut self) -> ! {
+    unsafe { ffi::lua_error(self.L) };
+    unreachable!()
   }
 
   /// Maps to `lua_next`.
@@ -839,8 +839,9 @@ impl State {
   }
 
   /// Maps to `lua_getallocf`.
-  pub fn get_alloc_fn(&mut self, ud: *mut *mut c_void) -> Allocator {
-    unsafe { ffi::lua_getallocf(self.L, ud) }
+  pub fn get_alloc_fn(&mut self) -> (Allocator, *mut c_void) {
+    let mut slot = ptr::null_mut();
+    (unsafe { ffi::lua_getallocf(self.L, &mut slot) }, slot)
   }
 
   /// Maps to `lua_setallocf`.
@@ -1092,9 +1093,11 @@ impl State {
   }
 
   /// Maps to `luaL_argerror`.
-  pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> c_int {
+  pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> ! {
+    // nb: leaks the CString
     let c_str = CString::new(extramsg).unwrap();
-    unsafe { ffi::luaL_argerror(self.L, arg, c_str.as_ptr()) }
+    unsafe { ffi::luaL_argerror(self.L, arg, c_str.as_ptr()) };
+    unreachable!()
   }
 
   // omitted: luaL_checkstring
