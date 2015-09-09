@@ -23,6 +23,18 @@ fn build_lua() -> io::Result<()> {
     run_command_in_dir(&["make", "linux"], Some(&dir))
 }
 
+#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+fn build_lua() -> io::Result<()> {
+    let dir = build_dir().join("lua-5.3.0");
+    try!(run_command_in_dir(&["sed", "-e", "s/^MYCFLAGS=.*/MYCFLAGS=-fPIC/g", "-i", "bak", "src/Makefile"],
+                            Some(&dir)));
+    if cfg!(target_os = "freebsd") {
+        run_command_in_dir(&["make", "freebsd"], Some(&dir))
+    } else {
+        run_command_in_dir(&["make", "bsd"], Some(&dir))
+    }
+}
+
 /// Runs the command 'all_args[0]' with the arguments 'all_args[1..]' in the
 /// current directory.
 fn run_command(all_args: &[&str]) -> io::Result<()> {
@@ -53,6 +65,11 @@ fn build_dir() -> PathBuf {
     PathBuf::from(env::var("OUT_DIR").unwrap())
 }
 
+#[cfg(not(any(target_os = "freebsd", target_os = "dragonfly")))]
+const FETCH_CMD: &'static str = "wget";
+#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+const FETCH_CMD: &'static str = "fetch";
+
 /// If a static Lua is not yet available from a prior run of this script, this
 /// will download Lua and build it. The cargo configuration text to link
 /// statically against lua.a is then printed to stdout.
@@ -62,8 +79,9 @@ fn prebuild() ->io::Result<()> {
     ).is_ok() {
         try!(fs::create_dir_all(&build_dir()));
 
+
         // Compile Lua.
-        try!(run_command_in_dir(&["wget",
+        try!(run_command_in_dir(&[FETCH_CMD,
                                 "http://www.lua.org/ftp/lua-5.3.0.tar.gz"],
                                 Some(&build_dir())));
         try!(run_command_in_dir(&["tar", "xzvf", "lua-5.3.0.tar.gz"],
