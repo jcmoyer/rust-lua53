@@ -30,13 +30,6 @@ extern crate bitflags;
 pub use wrapper::state::{
   State,
 
-  Number,
-  Integer,
-  Function,
-  Allocator,
-  Hook,
-  Index,
-
   Arithmetic,
   Comparison,
   ThreadStatus,
@@ -53,5 +46,19 @@ pub use wrapper::state::{
   RIDX_MAINTHREAD, RIDX_GLOBALS
 };
 
+pub use wrapper::convert::{
+  ToLua,
+  FromLua
+};
+
+pub use ffi::lua_Number as Number;
+pub use ffi::lua_Integer as Integer;
+pub use ffi::lua_CFunction as Function;
+pub use ffi::lua_Alloc as Allocator;
+pub use ffi::lua_Hook as Hook;
+
+/// Integer type used to index the Lua stack, usually `i32`.
+pub type Index = libc::c_int;
+
 pub mod ffi;
-pub mod wrapper;
+mod wrapper;
