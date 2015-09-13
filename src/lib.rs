@@ -62,3 +62,6 @@ pub type Index = libc::c_int;
 
 pub mod ffi;
 mod wrapper;
+
+#[doc(hidden)]
+pub mod macros;
