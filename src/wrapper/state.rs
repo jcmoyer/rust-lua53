@@ -20,19 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-//! Implements an idiomatic, Rust wrapper around `lua_State`.
-//!
-//! Function names adhere to Rust naming conventions. Most of the time, this
-//! means breaking up long C function names using underscores; however, there
-//! are some cases where different names are used. Typically, these are cases
-//! where the name itself is a reserved Rust keyword (such as `ref` in
-//! `luaL_ref` or `where` in `luaL_where`) or where the name is used in both
-//! the base Lua library and the auxiliary Lua library (such as
-//! `lua_getmetatable` and `luaL_getmetatable`). More descriptive names have
-//! been chosen for these functions. Finally, any reference to C functions has
-//! been replaced by the term `native functions`. `lua_iscfunction` is
-//! `is_native_fn` and `lua_tocfunction` is `to_native_fn`.
-
 use ffi;
 use ffi::{lua_State, lua_Debug};
 
@@ -41,19 +28,14 @@ use std::{mem, ptr, str, slice};
 use std::ffi::{CString, CStr};
 use super::convert::{ToLua, FromLua};
 
-/// Represents a Lua number. For most installations, this is a 64-bit floating
-/// point number.
-pub type Number = ffi::lua_Number;
-/// Represents a Lua integer. For most installations, this is a 64-bit integer
-/// type.
-pub type Integer = ffi::lua_Integer;
-/// Represents a native function that can be passed to Lua.
-pub type Function = ffi::lua_CFunction;
-pub type Allocator = ffi::lua_Alloc;
-pub type Hook = ffi::lua_Hook;
-
-/// Type used to index the Lua stack.
-pub type Index = c_int;
+use ::{
+  Number,
+  Integer,
+  Function,
+  Allocator,
+  Hook,
+  Index,
+};
 
 /// Arithmetic operations for `lua_arith`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -171,15 +153,14 @@ impl Type {
   }
 }
 
-/// Type used for Lua references generated through `luaL_ref` and `luaL_unref`.
+/// Type of Lua references generated through `reference` and `unreference`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Reference(c_int);
 
-/// The value for all references to nil values.
+/// The result of `reference` for `nil` values.
 pub const REFNIL: Reference = Reference(ffi::LUA_REFNIL);
 
-/// A value that is guaranteed to be different from anything returned from
-/// `luaL_ref`.
+/// A value that will never be returned by `reference`.
 pub const NOREF: Reference = Reference(ffi::LUA_REFNIL);
 
 impl Reference {
@@ -201,22 +182,29 @@ impl Reference {
 }
 
 bitflags! {
+  #[doc="Hook point masks for `lua_sethook`."]
   flags HookMask: c_int {
+    #[doc="Called when the interpreter calls a function."]
     const MASKCALL  = ffi::LUA_MASKCALL,
+    #[doc="Called when the interpreter returns from a function."]
     const MASKRET   = ffi::LUA_MASKRET,
+    #[doc="Called when the interpreter is about to start the execution of a new line of code."]
     const MASKLINE  = ffi::LUA_MASKLINE,
+    #[doc="Called after the interpreter executes every `count` instructions."]
     const MASKCOUNT = ffi::LUA_MASKCOUNT
   }
 }
 
-/// Specifies that all results from invoking a function should be pushed onto
+/// Specifies that all results from a `call` invocation should be pushed onto
 /// the stack.
 pub const MULTRET: c_int = ffi::LUA_MULTRET;
 
 /// Pseudo-index used to access the Lua registry.
 pub const REGISTRYINDEX: Index = ffi::LUA_REGISTRYINDEX;
 
+/// The registry key for the main thread, to be used with `raw_geti`.
 pub const RIDX_MAINTHREAD: Integer = ffi::LUA_RIDX_MAINTHREAD;
+/// The registry key for the global environment, to be used with `raw_geti`.
 pub const RIDX_GLOBALS: Integer = ffi::LUA_RIDX_GLOBALS;
 
 unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::lua_KContext) -> c_int
@@ -225,7 +213,18 @@ unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::l
   mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
 }
 
-/// Wraps a `lua_State`.
+/// An idiomatic, Rust wrapper around `lua_State`.
+///
+/// Function names adhere to Rust naming conventions. Most of the time, this
+/// means breaking up long C function names using underscores; however, there
+/// are some cases where different names are used. Typically, these are cases
+/// where the name itself is a reserved Rust keyword (such as `ref` in
+/// `luaL_ref` or `where` in `luaL_where`) or where the name is used in both
+/// the base Lua library and the auxiliary Lua library (such as
+/// `lua_getmetatable` and `luaL_getmetatable`). More descriptive names have
+/// been chosen for these functions. Finally, any reference to C functions has
+/// been replaced by the term `native functions`. `lua_iscfunction` is
+/// `is_native_fn` and `lua_tocfunction` is `to_native_fn`.
 #[allow(non_snake_case)]
 pub struct State {
   L: *mut lua_State,
