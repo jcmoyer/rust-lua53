@@ -35,6 +35,23 @@ fn build_lua() -> io::Result<()> {
     }
 }
 
+/// The command to fetch a URL (e.g. with wget) specialized for different
+/// OSes.
+#[cfg(not(any(target_os = "freebsd", target_os = "dragonfly", target_os = "macos")))]
+fn fetch_in_dir(url: &str, cwd: Option<&Path>) -> io::Result<()> {
+    run_command_in_dir(&["wget", url], cwd)
+}
+
+#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+fn fetch_in_dir(url: &str, cwd: Option<&Path>) -> io::Result<()> {
+    run_command_in_dir(&["fetch", url], cwd)
+}
+
+#[cfg(target_os = "macos")]
+fn fetch_in_dir(url: &str, cwd: Option<&Path>) -> io::Result<()> {
+    run_command_in_dir(&["curl", "-O", url], cwd)
+}
+
 /// Runs the command 'all_args[0]' with the arguments 'all_args[1..]' in the
 /// current directory.
 fn run_command(all_args: &[&str]) -> io::Result<()> {
@@ -65,11 +82,6 @@ fn build_dir() -> PathBuf {
     PathBuf::from(env::var("OUT_DIR").unwrap())
 }
 
-#[cfg(not(any(target_os = "freebsd", target_os = "dragonfly")))]
-const FETCH_CMD: &'static str = "wget";
-#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
-const FETCH_CMD: &'static str = "fetch";
-
 /// If a static Lua is not yet available from a prior run of this script, this
 /// will download Lua and build it. The cargo configuration text to link
 /// statically against lua.a is then printed to stdout.
@@ -81,9 +93,8 @@ fn prebuild() ->io::Result<()> {
 
 
         // Compile Lua.
-        try!(run_command_in_dir(&[FETCH_CMD,
-                                "http://www.lua.org/ftp/lua-5.3.0.tar.gz"],
-                                Some(&build_dir())));
+        try!(fetch_in_dir("http://www.lua.org/ftp/lua-5.3.0.tar.gz",
+                          Some(&build_dir())));
         try!(run_command_in_dir(&["tar", "xzvf", "lua-5.3.0.tar.gz"],
                                 Some(&build_dir())));
 
