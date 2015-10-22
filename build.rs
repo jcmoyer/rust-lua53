@@ -18,9 +18,7 @@ fn build_lua() -> io::Result<()> {
 #[cfg(target_os="linux")]
 fn build_lua() -> io::Result<()> {
     let dir = build_dir().join("lua-5.3.0");
-    try!(run_command_in_dir(&["sed", "-i", "s/^MYCFLAGS=.*/MYCFLAGS=-fPIC/g", "src/Makefile"],
-                            Some(&dir)));
-    run_command_in_dir(&["make", "linux"], Some(&dir))
+    run_command_in_dir(&["make", "linux", "MYCFLAGS=-fPIC"], Some(&dir))
 }
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
