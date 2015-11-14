@@ -1146,6 +1146,17 @@ impl State {
     }
   }
 
+  pub fn to_str_in_place(&mut self, index: Index) -> Option<&str> {
+      let mut len = 0;
+    let ptr = unsafe { ffi::lua_tolstring(self.L, index, &mut len) };
+    if ptr.is_null() {
+      None
+    } else {
+      let slice = unsafe { slice::from_raw_parts(ptr as *const u8, len as usize) };
+      str::from_utf8(slice).ok()
+    }
+  }
+
   /// Maps to `luaL_argerror`.
   pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> ! {
     // nb: leaks the CString
