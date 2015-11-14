@@ -256,6 +256,61 @@ impl State {
     unsafe { ffi::luaL_openlibs(self.L) }
   }
 
+  /// Maps to `luaopen_base`.
+  pub fn open_base(&mut self) -> c_int {
+    unsafe { ffi::luaopen_base(self.L) }
+  }
+
+  /// Maps to `luaopen_coroutine`.
+  pub fn open_coroutine(&mut self) -> c_int {
+    unsafe { ffi::luaopen_coroutine(self.L) }
+  }
+
+  /// Maps to `luaopen_table`.
+  pub fn open_table(&mut self) -> c_int {
+    unsafe { ffi::luaopen_table(self.L) }
+  }
+
+  /// Maps to `luaopen_io`.
+  pub fn open_io(&mut self) -> c_int {
+    unsafe { ffi::luaopen_io(self.L) }
+  }
+
+  /// Maps to `luaopen_os`.
+  pub fn open_os(&mut self) -> c_int {
+    unsafe { ffi::luaopen_os(self.L) }
+  }
+
+  /// Maps to `luaopen_string`.
+  pub fn open_string(&mut self) -> c_int {
+    unsafe { ffi::luaopen_string(self.L) }
+  }
+
+  /// Maps to `luaopen_utf8`.
+  pub fn open_utf8(&mut self) -> c_int {
+    unsafe { ffi::luaopen_utf8(self.L) }
+  }
+
+  /// Maps to `luaopen_bit32`.
+  pub fn open_bit32(&mut self) -> c_int {
+    unsafe { ffi::luaopen_bit32(self.L) }
+  }
+
+  /// Maps to `luaopen_math`.
+  pub fn open_math(&mut self) -> c_int {
+    unsafe { ffi::luaopen_math(self.L) }
+  }
+
+  /// Maps to `luaopen_debug`.
+  pub fn open_debug(&mut self) -> c_int {
+    unsafe { ffi::luaopen_debug(self.L) }
+  }
+
+  /// Maps to `luaopen_package`.
+  pub fn open_package(&mut self) -> c_int {
+    unsafe { ffi::luaopen_package(self.L) }
+  }
+
   /// Maps to `luaL_dofile`.
   pub fn do_file(&mut self, filename: &str) -> ThreadStatus {
     let c_str = CString::new(filename).unwrap();
