@@ -987,8 +987,6 @@ impl State {
     unsafe { ffi::lua_pushglobaltable(self.L) };
   }
 
-  // omitted: lua_tostring
-
   /// Maps to `lua_insert`.
   pub fn insert(&mut self, idx: Index) {
     unsafe { ffi::lua_insert(self.L, idx) }
@@ -1146,8 +1144,12 @@ impl State {
     }
   }
 
+  /// Maps to `lua_tolstring`. This function is not called `to_string` because
+  /// that method name is used for the `ToString` trait. This function returns
+  /// a reference to the string at the given index, on which `to_owned` may be
+  /// called.
   pub fn to_str_in_place(&mut self, index: Index) -> Option<&str> {
-      let mut len = 0;
+    let mut len = 0;
     let ptr = unsafe { ffi::lua_tolstring(self.L, index, &mut len) };
     if ptr.is_null() {
       None
