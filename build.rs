@@ -1,33 +1,28 @@
-use std::env;
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
-#[cfg(target_os="windows")]
-fn build_lua() -> io::Result<()> {
-    run_command_in_dir(&["make", "mingw"], Some(&build_dir().join("lua-5.3.0")))
-}
-
-/// The comand to build lua, specialized for different OSes.
-#[cfg(target_os="macos")]
-fn build_lua() -> io::Result<()> {
-    run_command_in_dir(&["make", "macosx"], Some(&build_dir().join("lua-5.3.0")))
-}
-
-#[cfg(target_os="linux")]
-fn build_lua() -> io::Result<()> {
-    let dir = build_dir().join("lua-5.3.0");
-    run_command_in_dir(&["make", "linux", "MYCFLAGS=-fPIC"], Some(&dir))
-}
-
-#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
-fn build_lua() -> io::Result<()> {
-    let dir = build_dir().join("lua-5.3.0");
-    if cfg!(target_os = "freebsd") {
-        run_command_in_dir(&["make", "freebsd", "MYCFLAGS=-fPIC"], Some(&dir))
+/// The command to build lua, with switches for different OSes.
+fn build_lua(dir: &Path) -> io::Result<()> {
+    let platform = if cfg!(target_os = "windows") {
+        "mingw"
+    } else if cfg!(target_os = "macos") {
+        "macosx"
+    } else if cfg!(target_os = "linux") {
+        "linux"
+    } else if cfg!(target_os = "freebsd") {
+        "freebsd"
+    } else if cfg!(target_os = "dragonfly") {
+        "bsd"
     } else {
-        run_command_in_dir(&["make", "bsd", "MYCFLAGS=-fPIC"], Some(&dir))
+        panic!("Unsupported target OS")
+    };
+
+    if cfg!(any(target_os = "linux", target_os = "freebsd", target_os = "bsd")) {
+        run_command(&["make", platform, "MYCFLAGS=-fPIC"], Some(dir))
+    } else {
+        run_command(&["make", platform], Some(dir))
     }
 }
 
@@ -35,32 +30,24 @@ fn build_lua() -> io::Result<()> {
 /// OSes.
 #[cfg(not(any(target_os = "freebsd", target_os = "dragonfly", target_os = "macos")))]
 fn fetch_in_dir(url: &str, cwd: Option<&Path>) -> io::Result<()> {
-    run_command_in_dir(&["wget", url], cwd)
+    run_command(&["wget", url], cwd)
 }
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 fn fetch_in_dir(url: &str, cwd: Option<&Path>) -> io::Result<()> {
-    run_command_in_dir(&["fetch", url], cwd)
+    run_command(&["fetch", url], cwd)
 }
 
 #[cfg(target_os = "macos")]
 fn fetch_in_dir(url: &str, cwd: Option<&Path>) -> io::Result<()> {
-    run_command_in_dir(&["curl", "-O", url], cwd)
-}
-
-/// Runs the command 'all_args[0]' with the arguments 'all_args[1..]' in the
-/// current directory.
-fn run_command(all_args: &[&str]) -> io::Result<()> {
-    run_command_in_dir(all_args, None)
+    run_command(&["curl", "-O", url], cwd)
 }
 
 /// Runs the command 'all_args[0]' with the arguments 'all_args[1..]' in the
 /// directory 'cwd' or the current directory.
-fn run_command_in_dir(all_args: &[&str], cwd: Option<&Path>) -> io::Result<()> {
-    let command_name = all_args[0];
-    let args = &all_args[1..];
-    let mut command = Command::new(command_name);
-    command.args(args);
+fn run_command(all_args: &[&str], cwd: Option<&Path>) -> io::Result<()> {
+    let mut command = Command::new(all_args[0]);
+    command.args(&all_args[1..]);
     if let Some(cwd) = cwd {
         command.current_dir(cwd);
     }
@@ -68,50 +55,45 @@ fn run_command_in_dir(all_args: &[&str], cwd: Option<&Path>) -> io::Result<()> {
     if !status.success() {
         return Err(io::Error::new(io::ErrorKind::Other, format!("The command\n\
         \t{}\n\
-        did not run successfully.", all_args.connect(" "))));
+        did not run successfully.", all_args.join(" "))));
     }
     Ok(())
-}
-
-/// The cargo output directory for builds from this.
-fn build_dir() -> PathBuf {
-    PathBuf::from(env::var("OUT_DIR").unwrap())
 }
 
 /// If a static Lua is not yet available from a prior run of this script, this
 /// will download Lua and build it. The cargo configuration text to link
 /// statically against lua.a is then printed to stdout.
-fn prebuild() ->io::Result<()> {
-    if !fs::metadata(
-        &build_dir().join("lua-5.3.0").join("src").join("liblua.a")
-    ).is_ok() {
-        try!(fs::create_dir_all(&build_dir()));
+fn prebuild() -> io::Result<()> {
+    let build_dir = Path::new(env!("OUT_DIR"));
 
+    // Ensure the presence of liblua.a
+    if !fs::metadata(concat!(env!("OUT_DIR"), "/lua-5.3.0/src/liblua.a")).is_ok() {
+        try!(fs::create_dir_all(build_dir));
 
-        // Compile Lua.
-        try!(fetch_in_dir("http://www.lua.org/ftp/lua-5.3.0.tar.gz",
-                          Some(&build_dir())));
-        try!(run_command_in_dir(&["tar", "xzvf", "lua-5.3.0.tar.gz"],
-                                Some(&build_dir())));
-
-        try!(build_lua());
-
-        // Compile and run glue.c.
-        let glue = build_dir().join("glue").to_string_lossy().into_owned();
-        try!(run_command(&["gcc",
-                         "-I", &build_dir().join("lua-5.3.0").join("src").to_string_lossy(),
-                         &PathBuf::from("src").join("glue").join("glue.c").to_string_lossy(),
-                         "-o", &glue]));
-        try!(run_command(&[&glue, "src/ffi/glue.rs"]));
+        // Download lua if it hasn't been already
+        if !fs::metadata(concat!(env!("OUT_DIR"), "/lua-5.3.0.tar.gz")).is_ok() {
+            try!(fetch_in_dir("http://www.lua.org/ftp/lua-5.3.0.tar.gz", Some(build_dir)));
+            try!(run_command(&["tar", "xzf", "lua-5.3.0.tar.gz"], Some(build_dir)));
+        }
+        // Compile lua
+        try!(build_lua(Path::new(concat!(env!("OUT_DIR"), "/lua-5.3.0"))));
     }
 
-    let mut build_dir_absolute = try!(env::current_dir());
-    build_dir_absolute.push(&build_dir());
-    build_dir_absolute.push("lua-5.3.0");
-    build_dir_absolute.push("src");
+    // Ensure the presence of glue.rs
+    if !fs::metadata(concat!(env!("OUT_DIR"), "/glue.rs")).is_ok() {
+        // Compile glue.c
+        let glue = concat!(env!("OUT_DIR"), "/glue");
+        try!(run_command(&["gcc",
+                         "-I", concat!(env!("OUT_DIR"), "/lua-5.3.0/src"),
+                         "src/glue/glue.c",
+                         "-o", &glue], None));
+        // Run glue to generate glue.rs
+        try!(run_command(&[&glue, concat!(env!("OUT_DIR"), "/glue.rs")], None));
+    }
 
+    // Output build information
     println!("cargo:rustc-link-lib=static=lua");
-    println!("cargo:rustc-link-search=native={}", build_dir_absolute.to_string_lossy());
+    println!(concat!("cargo:rustc-link-search=native=", env!("OUT_DIR"), "/lua-5.3.0/src"));
 
     Ok(())
 }

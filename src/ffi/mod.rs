@@ -292,7 +292,11 @@ pub use self::lualib::{
   LUA_UTF8LIBNAME, LUA_BITLIBNAME, LUA_MATHLIBNAME, LUA_DBLIBNAME, LUA_LOADLIBNAME
 };
 
-mod glue;
+#[allow(unused_imports, dead_code, non_camel_case_types)]
+mod glue {
+  include!(concat!(env!("OUT_DIR"), "/glue.rs"));
+}
+
 mod luaconf;
 mod lua;
 mod lauxlib;
