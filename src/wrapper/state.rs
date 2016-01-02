@@ -832,12 +832,15 @@ impl State {
   }
 
   /// Maps to `lua_resume`.
-  pub fn resume(&mut self, from: Option<&mut State>, nargs: c_int) -> c_int {
+  pub fn resume(&mut self, from: Option<&mut State>, nargs: c_int) -> ThreadStatus {
     let from_ptr = match from {
       Some(state) => state.L,
       None        => ptr::null_mut()
     };
-    unsafe { ffi::lua_resume(self.L, from_ptr, nargs) }
+    let result = unsafe {
+      ffi::lua_resume(self.L, from_ptr, nargs)
+    };
+    ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Maps to `lua_status`.
