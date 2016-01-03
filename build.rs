@@ -1,3 +1,4 @@
+use std::env;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -72,7 +73,18 @@ fn prebuild() -> io::Result<()> {
 
         // Download lua if it hasn't been already
         if !fs::metadata(concat!(env!("OUT_DIR"), "/lua-5.3.0.tar.gz")).is_ok() {
-            try!(fetch_in_dir("http://www.lua.org/ftp/lua-5.3.0.tar.gz", Some(build_dir)));
+            match env::var("LUA_LOCAL_SOURCE") {
+                Ok(lua_source_path) => {
+                    // Copy local Lua source.
+                    try!(run_command(&["cp", &lua_source_path, "."], Some(build_dir)));
+                },
+                Err(_) => {
+                    // Download Lua source.
+                    try!(fetch_in_dir("http://www.lua.org/ftp/lua-5.3.0.tar.gz", Some(build_dir)));
+                }
+            }
+
+            // Compile Lua.
             try!(run_command(&["tar", "xzf", "lua-5.3.0.tar.gz"], Some(build_dir)));
         }
         // Compile lua
