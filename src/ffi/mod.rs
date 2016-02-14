@@ -22,8 +22,7 @@
 
 //! Low level bindings to Lua.
 
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
 
 // This is more or less in the order it appears in the Lua manual, with the
 // exception of constants, which appear scattered throughout the manual text.
@@ -293,9 +292,13 @@ pub use self::lualib::{
   LUA_UTF8LIBNAME, LUA_BITLIBNAME, LUA_MATHLIBNAME, LUA_DBLIBNAME, LUA_LOADLIBNAME
 };
 
-mod glue;
-pub mod luaconf;
-pub mod lua;
-pub mod lauxlib;
-pub mod lualib;
+#[allow(unused_imports, dead_code, non_camel_case_types)]
+mod glue {
+  include!(concat!(env!("OUT_DIR"), "/glue.rs"));
+}
+
+mod luaconf;
+mod lua;
+mod lauxlib;
+mod lualib;
 

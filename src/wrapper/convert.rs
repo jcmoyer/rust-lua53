@@ -22,7 +22,7 @@
 
 //! Implements conversions for Rust types to and from Lua.
 
-use super::state::{State, Integer, Number, Function};
+use ::{State, Integer, Number, Function, Index};
 
 /// Trait for types that can be pushed onto the stack of a Lua state.
 ///
@@ -41,7 +41,7 @@ impl<'a> ToLua for &'a str {
 
 impl ToLua for String {
   fn to_lua(&self, state: &mut State) {
-    state.push_string(self);
+    state.push_string(&self);
   }
 }
 
@@ -90,22 +90,22 @@ impl<T: ToLua> ToLua for Option<T> {
 ///
 /// It is important that implementors of this trait ensure that `from_lua`
 /// behaves like one of the `lua_to*` functions for consistency.
-pub trait FromLua {
+pub trait FromLua: Sized {
   /// Converts the value on top of the stack of a Lua state to a value of type
   /// `Option<Self>`.
-  fn from_lua(state: &mut State) -> Option<Self>;
+  fn from_lua(state: &mut State, index: Index) -> Option<Self>;
 }
 
 impl FromLua for String {
-  fn from_lua(state: &mut State) -> Option<String> {
-    state.to_str(-1)
+  fn from_lua(state: &mut State, index: Index) -> Option<String> {
+    state.to_str(index).map(ToOwned::to_owned)
   }
 }
 
 impl FromLua for Integer {
-  fn from_lua(state: &mut State) -> Option<Integer> {
-    if state.is_integer(-1) {
-      Some(state.to_integer(-1))
+  fn from_lua(state: &mut State, index: Index) -> Option<Integer> {
+    if state.is_integer(index) {
+      Some(state.to_integer(index))
     } else {
       None
     }
@@ -113,9 +113,9 @@ impl FromLua for Integer {
 }
 
 impl FromLua for Number {
-  fn from_lua(state: &mut State) -> Option<Number> {
-    if state.is_number(-1) {
-      Some(state.to_number(-1))
+  fn from_lua(state: &mut State, index: Index) -> Option<Number> {
+    if state.is_number(index) {
+      Some(state.to_number(index))
     } else {
       None
     }
@@ -123,9 +123,9 @@ impl FromLua for Number {
 }
 
 impl FromLua for bool {
-  fn from_lua(state: &mut State) -> Option<bool> {
-    if state.is_bool(-1) {
-      Some(state.to_bool(-1))
+  fn from_lua(state: &mut State, index: Index) -> Option<bool> {
+    if state.is_bool(index) {
+      Some(state.to_bool(index))
     } else {
       None
     }
@@ -134,12 +134,11 @@ impl FromLua for bool {
 
 //#[unstable(reason="this is an experimental trait")]
 impl FromLua for Function {
-  fn from_lua(state: &mut State) -> Option<Function> {
-    if state.is_native_fn(-1) {
-      Some(state.to_native_fn(-1))
+  fn from_lua(state: &mut State, index: Index) -> Option<Function> {
+    if state.is_native_fn(index) {
+      Some(state.to_native_fn(index))
     } else {
       None
     }
   }
 }
-

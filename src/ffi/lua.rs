@@ -29,7 +29,7 @@ use std::ptr;
 pub use super::glue::{LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_NUM, LUA_VERSION_RELEASE};
 pub use super::glue::{LUA_VERSION, LUA_RELEASE, LUA_COPYRIGHT, LUA_AUTHORS};
 
-// LUA_SIGNATURE?
+pub const LUA_SIGNATURE: &'static [u8] = b"\x1bLua";
 
 // option for multiple returns in 'lua_pcall' and 'lua_call'
 pub const LUA_MULTRET: c_int = -1;
@@ -76,10 +76,10 @@ pub const LUA_RIDX_MAINTHREAD: lua_Integer = 1;
 pub const LUA_RIDX_GLOBALS: lua_Integer = 2;
 pub const LUA_RIDX_LAST: lua_Integer = LUA_RIDX_GLOBALS;
 
-// type of numbers in lua
+/// A Lua number, usually equivalent to `f64`.
 pub type lua_Number = luaconf::LUA_NUMBER;
 
-// type for integer functions
+/// A Lua integer, usually equivalent to `i64`.
 pub type lua_Integer = luaconf::LUA_INTEGER;
 
 // unsigned integer type
@@ -88,7 +88,7 @@ pub type lua_Unsigned = luaconf::LUA_UNSIGNED;
 // type for continuation-function contexts
 pub type lua_KContext = luaconf::LUA_KCONTEXT;
 
-// Type for C functions registered with Lua
+/// Type for native functions that can be passed to Lua.
 pub type lua_CFunction = Option<unsafe extern "C" fn(L: *mut lua_State) -> c_int>;
 
 // Type for continuation functions
@@ -98,7 +98,7 @@ pub type lua_KFunction = Option<unsafe extern "C" fn(L: *mut lua_State, status: 
 pub type lua_Reader = Option<unsafe extern "C" fn(L: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char>;
 pub type lua_Writer = Option<unsafe extern "C" fn(L: *mut lua_State, p: *const c_void, sz: size_t, ud: *mut c_void) -> c_int>;
 
-// Type for memory-allocation functions
+/// Type for memory-allocation functions.
 pub type lua_Alloc = Option<unsafe extern "C" fn(ud: *mut c_void, ptr: *mut c_void, osize: size_t, nsize: size_t) -> *mut c_void>;
 
 extern {
@@ -400,7 +400,7 @@ pub const LUA_MASKRET: c_int = 1 << (LUA_HOOKRET as usize);
 pub const LUA_MASKLINE: c_int = 1 << (LUA_HOOKLINE as usize);
 pub const LUA_MASKCOUNT: c_int = 1 << (LUA_HOOKCOUNT as usize);
 
-// Functions to be called by the debugger in specific events
+/// Type for functions to be called on debug events.
 pub type lua_Hook = Option<extern "C" fn(L: *mut lua_State, ar: *mut lua_Debug)>;
 
 extern {

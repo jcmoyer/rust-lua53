@@ -20,50 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-//! Implements an idiomatic, Rust wrapper around `lua_State`.
-//!
-//! Function names adhere to Rust naming conventions. Most of the time, this
-//! means breaking up long C function names using underscores; however, there
-//! are some cases where different names are used. Typically, these are cases
-//! where the name itself is a reserved Rust keyword (such as `ref` in
-//! `luaL_ref` or `where` in `luaL_where`) or where the name is used in both
-//! the base Lua library and the auxiliary Lua library (such as
-//! `lua_getmetatable` and `luaL_getmetatable`). More descriptive names have
-//! been chosen for these functions. Finally, any reference to C functions has
-//! been replaced by the term `native functions`. `lua_iscfunction` is
-//! `is_native_fn` and `lua_tocfunction` is `to_native_fn`.
-
 use ffi;
 use ffi::{lua_State, lua_Debug};
 
-use libc::{c_char, c_int, c_void, size_t};
-use std::mem;
-use std::ptr;
-use std::str;
-use std::slice;
+use libc::{c_int, c_void, c_char, size_t};
+use std::{mem, ptr, str, slice};
 use std::ffi::{CString, CStr};
-use std::borrow::Cow;
-use std::borrow::ToOwned;
 use super::convert::{ToLua, FromLua};
 
-/// Represents a Lua number. For most installations, this is a 64-bit floating
-/// point number.
-pub type Number = ffi::lua_Number;
-/// Represents a Lua integer. For most installations, this is a 64-bit integer
-/// type.
-pub type Integer = ffi::lua_Integer;
-/// Represents a native function that can be passed to Lua.
-pub type Function = ffi::lua_CFunction;
-/// Represents a continuation function.
-pub type Continuation = ffi::lua_KFunction;
-pub type Reader = ffi::lua_Reader;
-pub type Writer = ffi::lua_Writer;
-pub type Context = ffi::lua_KContext;
-pub type Allocator = ffi::lua_Alloc;
-pub type Hook = ffi::lua_Hook;
-
-/// Type used to index the Lua stack.
-pub type Index = c_int;
+use ::{
+  Number,
+  Integer,
+  Function,
+  Allocator,
+  Hook,
+  Index,
+};
 
 /// Arithmetic operations for `lua_arith`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -119,6 +91,20 @@ impl ThreadStatus {
       _ => None
     }
   }
+
+  /// Returns `true` for error statuses and `false` for `Ok` and `Yield`.
+  pub fn is_err(self) -> bool {
+    match self {
+      ThreadStatus::RuntimeError |
+      ThreadStatus::SyntaxError |
+      ThreadStatus::MemoryError |
+      ThreadStatus::GcError |
+      ThreadStatus::MessageHandlerError |
+      ThreadStatus::FileError => true,
+      ThreadStatus::Ok |
+      ThreadStatus::Yield => false,
+    }
+  }
 }
 
 /// Options for the Lua garbage collector.
@@ -167,15 +153,14 @@ impl Type {
   }
 }
 
-/// Type used for Lua references generated through `luaL_ref` and `luaL_unref`.
+/// Type of Lua references generated through `reference` and `unreference`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Reference(c_int);
 
-/// The value for all references to nil values.
+/// The result of `reference` for `nil` values.
 pub const REFNIL: Reference = Reference(ffi::LUA_REFNIL);
 
-/// A value that is guaranteed to be different from anything returned from
-/// `luaL_ref`.
+/// A value that will never be returned by `reference`.
 pub const NOREF: Reference = Reference(ffi::LUA_REFNIL);
 
 impl Reference {
@@ -197,25 +182,49 @@ impl Reference {
 }
 
 bitflags! {
+  #[doc="Hook point masks for `lua_sethook`."]
   flags HookMask: c_int {
+    #[doc="Called when the interpreter calls a function."]
     const MASKCALL  = ffi::LUA_MASKCALL,
+    #[doc="Called when the interpreter returns from a function."]
     const MASKRET   = ffi::LUA_MASKRET,
+    #[doc="Called when the interpreter is about to start the execution of a new line of code."]
     const MASKLINE  = ffi::LUA_MASKLINE,
+    #[doc="Called after the interpreter executes every `count` instructions."]
     const MASKCOUNT = ffi::LUA_MASKCOUNT
   }
 }
 
-/// Specifies that all results from invoking a function should be pushed onto
+/// Specifies that all results from a `call` invocation should be pushed onto
 /// the stack.
 pub const MULTRET: c_int = ffi::LUA_MULTRET;
 
 /// Pseudo-index used to access the Lua registry.
 pub const REGISTRYINDEX: Index = ffi::LUA_REGISTRYINDEX;
 
+/// The registry key for the main thread, to be used with `raw_geti`.
 pub const RIDX_MAINTHREAD: Integer = ffi::LUA_RIDX_MAINTHREAD;
+/// The registry key for the global environment, to be used with `raw_geti`.
 pub const RIDX_GLOBALS: Integer = ffi::LUA_RIDX_GLOBALS;
 
-/// Wraps a `lua_State`.
+unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::lua_KContext) -> c_int
+  where F: FnOnce(&mut State, ThreadStatus) -> c_int
+{
+  mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
+}
+
+/// An idiomatic, Rust wrapper around `lua_State`.
+///
+/// Function names adhere to Rust naming conventions. Most of the time, this
+/// means breaking up long C function names using underscores; however, there
+/// are some cases where different names are used. Typically, these are cases
+/// where the name itself is a reserved Rust keyword (such as `ref` in
+/// `luaL_ref` or `where` in `luaL_where`) or where the name is used in both
+/// the base Lua library and the auxiliary Lua library (such as
+/// `lua_getmetatable` and `luaL_getmetatable`). More descriptive names have
+/// been chosen for these functions. Finally, any reference to C functions has
+/// been replaced by the term `native functions`. `lua_iscfunction` is
+/// `is_native_fn` and `lua_tocfunction` is `to_native_fn`.
 #[allow(non_snake_case)]
 pub struct State {
   L: *mut lua_State,
@@ -233,7 +242,7 @@ impl State {
   /// Constructs a wrapper `State` from a raw pointer. This is suitable for use
   /// inside of native functions that accept a `lua_State` to obtain a wrapper.
   #[allow(non_snake_case)]
-  pub fn from_ptr(L: *mut lua_State) -> State {
+  pub unsafe fn from_ptr(L: *mut lua_State) -> State {
     State { L: L, owned: false }
   }
 
@@ -252,9 +261,15 @@ impl State {
     unsafe { ffi::luaopen_base(self.L) }
   }
 
+<<<<<<< HEAD
   /// Maps to `luaopen_string`.
   pub fn open_string(&mut self) -> c_int {
     unsafe { ffi::luaopen_string(self.L) }
+=======
+  /// Maps to `luaopen_coroutine`.
+  pub fn open_coroutine(&mut self) -> c_int {
+    unsafe { ffi::luaopen_coroutine(self.L) }
+>>>>>>> upstream/master
   }
 
   /// Maps to `luaopen_table`.
@@ -262,11 +277,52 @@ impl State {
     unsafe { ffi::luaopen_table(self.L) }
   }
 
+<<<<<<< HEAD
+=======
+  /// Maps to `luaopen_io`.
+  pub fn open_io(&mut self) -> c_int {
+    unsafe { ffi::luaopen_io(self.L) }
+  }
+
+  /// Maps to `luaopen_os`.
+  pub fn open_os(&mut self) -> c_int {
+    unsafe { ffi::luaopen_os(self.L) }
+  }
+
+  /// Maps to `luaopen_string`.
+  pub fn open_string(&mut self) -> c_int {
+    unsafe { ffi::luaopen_string(self.L) }
+  }
+
+  /// Maps to `luaopen_utf8`.
+  pub fn open_utf8(&mut self) -> c_int {
+    unsafe { ffi::luaopen_utf8(self.L) }
+  }
+
+  /// Maps to `luaopen_bit32`.
+  pub fn open_bit32(&mut self) -> c_int {
+    unsafe { ffi::luaopen_bit32(self.L) }
+  }
+
+  /// Maps to `luaopen_math`.
+  pub fn open_math(&mut self) -> c_int {
+    unsafe { ffi::luaopen_math(self.L) }
+  }
+
+>>>>>>> upstream/master
   /// Maps to `luaopen_debug`.
   pub fn open_debug(&mut self) -> c_int {
     unsafe { ffi::luaopen_debug(self.L) }
   }
 
+<<<<<<< HEAD
+=======
+  /// Maps to `luaopen_package`.
+  pub fn open_package(&mut self) -> c_int {
+    unsafe { ffi::luaopen_package(self.L) }
+  }
+
+>>>>>>> upstream/master
   /// Maps to `luaL_dofile`.
   pub fn do_file(&mut self, filename: &str) -> ThreadStatus {
     let c_str = CString::new(filename).unwrap();
@@ -292,22 +348,24 @@ impl State {
 
   /// Converts the value on top of the stack to a value of type `T` and returns
   /// it.
-  pub fn to_type<T: FromLua>(&mut self) -> Option<T> {
-    FromLua::from_lua(self)
+  pub fn to_type<T: FromLua>(&mut self, index: Index) -> Option<T> {
+    FromLua::from_lua(self, index)
   }
 
   //===========================================================================
   // State manipulation
   //===========================================================================
   /// Maps to `lua_close`.
-  pub fn close(&mut self) {
-    unsafe { ffi::lua_close(self.L) }
+  pub fn close(self) {
+    // lua_close will be called in the Drop impl
+    if !self.owned {
+      panic!("cannot explicitly close non-owned Lua state")
+    }
   }
 
   /// Maps to `lua_newthread`.
   pub fn new_thread(&mut self) -> State {
-    let state = unsafe { ffi::lua_newthread(self.L) };
-    State::from_ptr(state)
+    unsafe { State::from_ptr(ffi::lua_newthread(self.L)) }
   }
 
   /// Maps to `lua_atpanic`.
@@ -403,11 +461,11 @@ impl State {
   }
 
   /// Maps to `lua_typename`.
-  pub fn typename_of(&mut self, tp: Type) -> String {
+  pub fn typename_of(&mut self, tp: Type) -> &'static str {
     unsafe {
       let ptr = ffi::lua_typename(self.L, tp as c_int);
       let slice = CStr::from_ptr(ptr).to_bytes();
-      str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+      str::from_utf8(slice).unwrap()
     }
   }
 
@@ -469,7 +527,7 @@ impl State {
     if state.is_null() {
       None
     } else {
-      Some(State::from_ptr(state))
+      Some(unsafe { State::from_ptr(state) })
     }
   }
 
@@ -516,15 +574,11 @@ impl State {
     unsafe { ffi::lua_pushinteger(self.L, i) }
   }
 
-  // omitted: lua_pushlstring
+  // omitted: lua_pushstring
 
-  /// Maps to `lua_pushstring`.
-  pub fn push_string(&mut self, s: &str) -> CString {
-    unsafe {
-      let c_str = CString::new(s).unwrap();
-      ffi::lua_pushstring(self.L, c_str.as_ptr());
-      c_str
-    }
+  /// Maps to `lua_pushlstring`.
+  pub fn push_string(&mut self, s: &str) {
+    unsafe { ffi::lua_pushlstring(self.L, s.as_ptr() as *const _, s.len() as size_t) };
   }
 
   // omitted: lua_pushvfstring
@@ -699,8 +753,16 @@ impl State {
   // 'load' and 'call' functions (load and run Lua code)
   //===========================================================================
   /// Maps to `lua_callk`.
-  pub fn callk(&mut self, nargs: c_int, nresults: c_int, ctx: Context, k: Continuation) {
-    unsafe { ffi::lua_callk(self.L, nargs, nresults, ctx, k) }
+  pub fn callk<F>(&mut self, nargs: c_int, nresults: c_int, continuation: F)
+    where F: FnOnce(&mut State, ThreadStatus) -> c_int
+  {
+    let func = continue_func::<F>;
+    unsafe {
+      let ctx = mem::transmute(Box::new(continuation));
+      ffi::lua_callk(self.L, nargs, nresults, ctx, Some(continue_func::<F>));
+      // no yield occurred, so call the continuation
+      func(self.L, ffi::LUA_OK, ctx);
+    }
   }
 
   /// Maps to `lua_call`.
@@ -709,11 +771,15 @@ impl State {
   }
 
   /// Maps to `lua_pcallk`.
-  pub fn pcallk(&mut self, nargs: c_int, nresults: c_int, msgh: c_int, ctx: Context, k: Continuation) -> ThreadStatus {
-    let result = unsafe {
-      ffi::lua_pcallk(self.L, nargs, nresults, msgh, ctx, k)
-    };
-    ThreadStatus::from_c_int(result).unwrap()
+  pub fn pcallk<F>(&mut self, nargs: c_int, nresults: c_int, msgh: c_int, continuation: F) -> c_int
+    where F: FnOnce(&mut State, ThreadStatus) -> c_int
+  {
+    let func = continue_func::<F>;
+    unsafe {
+      let ctx = mem::transmute(Box::new(continuation));
+      // lua_pcallk only returns if no yield occurs, so call the continuation
+      func(self.L, ffi::lua_pcallk(self.L, nargs, nresults, msgh, ctx, Some(func)), ctx)
+    }
   }
 
   /// Maps to `lua_pcall`.
@@ -726,11 +792,21 @@ impl State {
 
   // TODO: mode typing?
   /// Maps to `lua_load`.
-  pub fn load(&mut self, reader: Reader, data: *mut c_void, source: &str, mode: &str) -> ThreadStatus {
+  pub fn load<F>(&mut self, mut reader: F, source: &str, mode: &str) -> ThreadStatus
+    where F: FnMut(&mut State) -> &[u8]
+  {
+    unsafe extern fn read<F>(st: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char
+      where F: FnMut(&mut State) -> &[u8]
+    {
+      let mut state = State::from_ptr(st);
+      let slice = mem::transmute::<_, &mut F>(ud)(&mut state);
+      *sz = slice.len() as size_t;
+      slice.as_ptr() as *const _
+    }
     let source_c_str = CString::new(source).unwrap();
     let mode_c_str = CString::new(mode).unwrap();
     let result = unsafe {
-      ffi::lua_load(self.L, reader, data, source_c_str.as_ptr(), mode_c_str.as_ptr())
+      ffi::lua_load(self.L, Some(read::<F>), mem::transmute(&mut reader), source_c_str.as_ptr(), mode_c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -738,31 +814,45 @@ impl State {
   // returns isize because the return value is dependent on the writer - seems to
   // be usable for anything
   /// Maps to `lua_dump`.
-  pub fn dump(&mut self, writer: Writer, data: *mut c_void, strip: bool) -> c_int {
-    unsafe { ffi::lua_dump(self.L, writer, data, strip as c_int) }
+  pub fn dump<F>(&mut self, mut writer: F, strip: bool) -> c_int
+    where F: FnMut(&mut State, &[u8]) -> c_int
+  {
+    unsafe extern fn write<F>(st: *mut lua_State, p: *const c_void, sz: size_t, ud: *mut c_void) -> c_int
+      where F: FnMut(&mut State, &[u8]) -> c_int
+    {
+      mem::transmute::<_, &mut F>(ud)(&mut State::from_ptr(st), slice::from_raw_parts(p as *const _, sz as usize))
+    }
+    unsafe { ffi::lua_dump(self.L, Some(write::<F>), mem::transmute(&mut writer), strip as c_int) }
   }
 
   //===========================================================================
   // Coroutine functions
   //===========================================================================
   /// Maps to `lua_yieldk`.
-  pub fn co_yieldk(&mut self, nresults: c_int, ctx: Context, k: Continuation) -> c_int {
-    unsafe { ffi::lua_yieldk(self.L, nresults, ctx, k) }
+  pub fn co_yieldk<F>(&mut self, nresults: c_int, continuation: F) -> !
+    where F: FnOnce(&mut State, ThreadStatus) -> c_int
+  {
+    unsafe { ffi::lua_yieldk(self.L, nresults, mem::transmute(Box::new(continuation)), Some(continue_func::<F>)) };
+    panic!("co_yieldk called in non-coroutine context; check is_yieldable first")
   }
 
   /// Maps to `lua_yield`. This function is not called `yield` because it is a
   /// reserved keyword.
-  pub fn co_yield(&mut self, nresults: c_int) -> c_int {
-    unsafe { ffi::lua_yield(self.L, nresults) }
+  pub fn co_yield(&mut self, nresults: c_int) -> ! {
+    unsafe { ffi::lua_yield(self.L, nresults) };
+    panic!("co_yield called in non-coroutine context; check is_yieldable first")
   }
 
   /// Maps to `lua_resume`.
-  pub fn resume(&mut self, from: Option<&mut State>, nargs: c_int) -> c_int {
+  pub fn resume(&mut self, from: Option<&mut State>, nargs: c_int) -> ThreadStatus {
     let from_ptr = match from {
       Some(state) => state.L,
       None        => ptr::null_mut()
     };
-    unsafe { ffi::lua_resume(self.L, from_ptr, nargs) }
+    let result = unsafe {
+      ffi::lua_resume(self.L, from_ptr, nargs)
+    };
+    ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Maps to `lua_status`.
@@ -791,7 +881,12 @@ impl State {
   //===========================================================================
   /// Maps to `lua_error`.
   pub fn error(&mut self) -> ! {
+<<<<<<< HEAD
     unsafe { ffi::lua_error(self.L) }
+=======
+    unsafe { ffi::lua_error(self.L) };
+    unreachable!()
+>>>>>>> upstream/master
   }
 
   /// Maps to `lua_next`.
@@ -817,8 +912,9 @@ impl State {
   }
 
   /// Maps to `lua_getallocf`.
-  pub fn get_alloc_fn(&mut self, ud: *mut *mut c_void) -> Allocator {
-    unsafe { ffi::lua_getallocf(self.L, ud) }
+  pub fn get_alloc_fn(&mut self) -> (Allocator, *mut c_void) {
+    let mut slot = ptr::null_mut();
+    (unsafe { ffi::lua_getallocf(self.L, &mut slot) }, slot)
   }
 
   /// Maps to `lua_setallocf`.
@@ -829,7 +925,7 @@ impl State {
   //===========================================================================
   // Some useful macros (here implemented as functions)
   //===========================================================================
-  
+
   // omitted: lua_getextraspace
 
   /// Maps to `lua_tonumber`.
@@ -910,6 +1006,7 @@ impl State {
     unsafe { ffi::lua_pushglobaltable(self.L) };
   }
 
+<<<<<<< HEAD
   /// Maps to `lua_tostring`. This function is not called `to_string` because
   /// that method name is used for the `ToString` trait. This function makes a
   /// copy of the string on top of the stack and returns it as an owned `String`.
@@ -942,6 +1039,8 @@ impl State {
     }.and_then(|v| str::from_utf8(v).ok())
   }
 
+=======
+>>>>>>> upstream/master
   /// Maps to `lua_insert`.
   pub fn insert(&mut self, idx: Index) {
     unsafe { ffi::lua_insert(self.L, idx) }
@@ -984,46 +1083,46 @@ impl State {
   }
 
   /// Maps to `lua_getlocal`.
-  pub fn get_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<String> {
+  pub fn get_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_getlocal(self.L, ar, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
   /// Maps to `lua_setlocal`.
-  pub fn set_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<String> {
+  pub fn set_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_setlocal(self.L, ar, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
   /// Maps to `lua_getupvalue`.
-  pub fn get_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<String> {
+  pub fn get_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_getupvalue(self.L, funcindex, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
   /// Maps to `lua_setupvalue`.
-  pub fn set_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<String> {
+  pub fn set_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<&str> {
     let ptr = unsafe { ffi::lua_setupvalue(self.L, funcindex, n) };
     if ptr.is_null() {
       None
     } else {
       let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
+      str::from_utf8(slice).ok()
     }
   }
 
@@ -1084,16 +1183,46 @@ impl State {
     result != 0
   }
 
-  // omitted: luaL_tolstring
-
-  /// Maps to `luaL_argerror`.
-  pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> c_int {
-    let c_str = CString::new(extramsg).unwrap();
-    unsafe { ffi::luaL_argerror(self.L, arg, c_str.as_ptr()) }
+  /// Maps to `luaL_tolstring`. This function is not called `to_string` because
+  /// that method name is used for the `ToString` trait. This function returns
+  /// a reference to the string at the given index, on which `to_owned` may be
+  /// called.
+  pub fn to_str(&mut self, index: Index) -> Option<&str> {
+    let mut len = 0;
+    let ptr = unsafe { ffi::luaL_tolstring(self.L, index, &mut len) };
+    if ptr.is_null() {
+      None
+    } else {
+      let slice = unsafe { slice::from_raw_parts(ptr as *const u8, len as usize) };
+      str::from_utf8(slice).ok()
+    }
   }
 
-  // omitted: luaL_checklstring
-  // omitted: luaL_optlstring
+  /// Maps to `lua_tolstring`. This function is not called `to_string` because
+  /// that method name is used for the `ToString` trait. This function returns
+  /// a reference to the string at the given index, on which `to_owned` may be
+  /// called.
+  pub fn to_str_in_place(&mut self, index: Index) -> Option<&str> {
+    let mut len = 0;
+    let ptr = unsafe { ffi::lua_tolstring(self.L, index, &mut len) };
+    if ptr.is_null() {
+      None
+    } else {
+      let slice = unsafe { slice::from_raw_parts(ptr as *const u8, len as usize) };
+      str::from_utf8(slice).ok()
+    }
+  }
+
+  /// Maps to `luaL_argerror`.
+  pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> ! {
+    // nb: leaks the CString
+    let c_str = CString::new(extramsg).unwrap();
+    unsafe { ffi::luaL_argerror(self.L, arg, c_str.as_ptr()) };
+    unreachable!()
+  }
+
+  // omitted: luaL_checkstring
+  // omitted: luaL_optstring
 
   /// Maps to `luaL_checknumber`.
   pub fn check_number(&mut self, arg: Index) -> Number {
@@ -1241,11 +1370,10 @@ impl State {
   }
 
   /// Maps to `luaL_loadbufferx`.
-  pub fn load_bufferx(&mut self, buff: &str, sz: size_t, name: &str, mode: &str) -> ThreadStatus {
-    let buff_c_str = CString::new(buff).unwrap();
+  pub fn load_bufferx(&mut self, buff: &[u8], name: &str, mode: &str) -> ThreadStatus {
     let name_c_str = CString::new(name).unwrap();
     let mode_c_str = CString::new(mode).unwrap();
-    let result = unsafe { ffi::luaL_loadbufferx(self.L, buff_c_str.as_ptr(), sz, name_c_str.as_ptr(), mode_c_str.as_ptr()) };
+    let result = unsafe { ffi::luaL_loadbufferx(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr(), mode_c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
@@ -1264,7 +1392,7 @@ impl State {
   }
 
   /// Maps to `luaL_gsub`.
-  pub fn gsub(&mut self, s: &str, p: &str, r: &str) -> String {
+  pub fn gsub(&mut self, s: &str, p: &str, r: &str) -> &str {
     let s_c_str = CString::new(s).unwrap();
     let p_c_str = CString::new(p).unwrap();
     let r_c_str = CString::new(r).unwrap();
@@ -1272,7 +1400,7 @@ impl State {
       ffi::luaL_gsub(self.L, s_c_str.as_ptr(), p_c_str.as_ptr(), r_c_str.as_ptr())
     };
     let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-    str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+    str::from_utf8(slice).unwrap()
   }
 
   /// Maps to `luaL_setfuncs`.
@@ -1331,23 +1459,24 @@ impl State {
     }
   }
 
-  /// Maps to `luaL_checkstring`.
-  pub fn check_string(&mut self, n: Index) -> String {
-    let ptr = unsafe { ffi::luaL_checkstring(self.L, n) };
-    let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-    str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+  /// Maps to `luaL_checklstring`.
+  pub fn check_string(&mut self, n: Index) -> &str {
+    let mut size = 0;
+    let ptr = unsafe { ffi::luaL_checklstring(self.L, n, &mut size) };
+    let slice = unsafe { slice::from_raw_parts(ptr as *const u8, size as usize) };
+    str::from_utf8(slice).unwrap()
   }
 
-  /// Maps to `luaL_optstring`.
-  pub fn opt_string<'a>(&mut self, n: Index, default: &'a str) -> Cow<'a, str> {
+  /// Maps to `luaL_optlstring`.
+  pub fn opt_string<'a>(&'a mut self, n: Index, default: &'a str) -> &'a str {
+    let mut size = 0;
     let c_str = CString::new(default).unwrap();
-    let ptr = unsafe { ffi::luaL_optstring(self.L, n, c_str.as_ptr()) };
+    let ptr = unsafe { ffi::luaL_optlstring(self.L, n, c_str.as_ptr(), &mut size) };
     if ptr == c_str.as_ptr() {
-      Cow::Borrowed(default)
+      default
     } else {
-      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      let string = str::from_utf8(slice).map(|s| s.to_owned()).unwrap();
-      Cow::Owned(string)
+      let slice = unsafe { slice::from_raw_parts(ptr as *const u8, size as usize) };
+      str::from_utf8(slice).unwrap()
     }
   }
 
@@ -1357,10 +1486,9 @@ impl State {
   // omitted: luaL_optlong (use .opt_integer)
 
   /// Maps to `luaL_typename`.
-  pub fn typename_at(&mut self, n: Index) -> String {
-    let ptr = unsafe { ffi::luaL_typename(self.L, n) };
-    let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-    str::from_utf8(slice).map(|s| s.to_owned()).unwrap()
+  pub fn typename_at(&mut self, n: Index) -> &'static str {
+    let typeid = self.type_of(n).unwrap();
+    self.typename_of(typeid)
   }
 
   // luaL_dofile and luaL_dostring implemented above
@@ -1374,10 +1502,16 @@ impl State {
   // omitted: luaL_opt (undocumented function)
 
   /// Maps to `luaL_loadbuffer`.
+<<<<<<< HEAD
   pub fn load_buffer(&mut self, buff: &str, sz: size_t, name: &str) -> ThreadStatus {
     let bp = buff.as_ptr() as *const c_char;
     let name_c_str = CString::new(name).unwrap();
     let result = unsafe { ffi::luaL_loadbuffer(self.L, bp, sz, name_c_str.as_ptr()) };
+=======
+  pub fn load_buffer(&mut self, buff: &[u8], name: &str) -> ThreadStatus {
+    let name_c_str = CString::new(name).unwrap();
+    let result = unsafe { ffi::luaL_loadbuffer(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr()) };
+>>>>>>> upstream/master
     ThreadStatus::from_c_int(result).unwrap()
   }
 
@@ -1387,8 +1521,7 @@ impl State {
 impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
-      self.close();
+      unsafe { ffi::lua_close(self.L) }
     }
   }
 }
-

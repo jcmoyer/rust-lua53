@@ -2,18 +2,14 @@
 Aims to be complete Rust bindings for Lua 5.3 and beyond. Currently, `master`
 is tracking Lua `5.3.0`.
 
-Requires:
-- gcc
-- bash
-- a Lua 5.3 installation
+Requires a Unix-like environment. On Windows, [MSYS2](https://msys2.github.io/)
+is supported.
 
-**NOTE:** The build process requires Lua 5.3 headers for code generation
-purposes. If you built and installed normally, these will be located in
-`/usr/local/include` in both Linux and Windows MSYS2 environments. In this
-case, the build script will find them automatically. If for some reason these
-headers are elsewhere, you will need to export an environment variable called
-`LUA_INCLUDE` that points to a directory containing these
-files.
+You will need:
+- wget (fetch on FreeBSD/Dragonfly, curl on MacOS)
+- tar
+- make
+- gcc
 
 ### Using crates.io
 
@@ -33,19 +29,6 @@ Add this to your `Cargo.toml`:
 git = "https://github.com/jcmoyer/rust-lua53"
 ```
 
-### Manual
-
-If for some reason you're not using cargo (perhaps in Lua spirit!), you can
-clone this repository and build it yourself:
-
-```
-git clone https://github.com/jcmoyer/rust-lua53.git
-cd rust-lua53
-chmod +x ./prebuild.sh
-./prebuild.sh
-rustc src/lib.rs
-```
-
 # Example
 
 ```rust
@@ -61,4 +44,3 @@ fn main() {
 # License
 Licensed under the MIT License, which is the same license Lua is distributed
 under. Refer to `LICENSE.md` for more information.
-
