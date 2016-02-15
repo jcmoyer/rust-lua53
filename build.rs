@@ -96,15 +96,15 @@ fn prebuild() -> io::Result<()> {
 
         // Download lua if it hasn't been already
         if !fs::metadata(build_dir.join(&lua_tarball)).is_ok() {
-            match env::var("LUA_LOCAL_SOURCE") {
-                Ok(lua_source_path) => {
+            match env::var_os("LUA_LOCAL_SOURCE") {
+                Some(lua_source_path) => {
                     try!(Command::new("cp")
                          .arg(&PathBuf::from(lua_source_path).join(&lua_tarball))
                          .arg(".")
                          .current_dir(&build_dir)
                          .execute());
                 }
-                Err(_) => {
+                None => {
                     try!(fetch_in_dir(&format!(
                         "http://www.lua.org/ftp/{}", lua_tarball), &build_dir));
                 }
