@@ -261,15 +261,9 @@ impl State {
     unsafe { ffi::luaopen_base(self.L) }
   }
 
-<<<<<<< HEAD
-  /// Maps to `luaopen_string`.
-  pub fn open_string(&mut self) -> c_int {
-    unsafe { ffi::luaopen_string(self.L) }
-=======
   /// Maps to `luaopen_coroutine`.
   pub fn open_coroutine(&mut self) -> c_int {
     unsafe { ffi::luaopen_coroutine(self.L) }
->>>>>>> upstream/master
   }
 
   /// Maps to `luaopen_table`.
@@ -277,8 +271,6 @@ impl State {
     unsafe { ffi::luaopen_table(self.L) }
   }
 
-<<<<<<< HEAD
-=======
   /// Maps to `luaopen_io`.
   pub fn open_io(&mut self) -> c_int {
     unsafe { ffi::luaopen_io(self.L) }
@@ -309,20 +301,16 @@ impl State {
     unsafe { ffi::luaopen_math(self.L) }
   }
 
->>>>>>> upstream/master
   /// Maps to `luaopen_debug`.
   pub fn open_debug(&mut self) -> c_int {
     unsafe { ffi::luaopen_debug(self.L) }
   }
 
-<<<<<<< HEAD
-=======
   /// Maps to `luaopen_package`.
   pub fn open_package(&mut self) -> c_int {
     unsafe { ffi::luaopen_package(self.L) }
   }
 
->>>>>>> upstream/master
   /// Maps to `luaL_dofile`.
   pub fn do_file(&mut self, filename: &str) -> ThreadStatus {
     let c_str = CString::new(filename).unwrap();
@@ -881,12 +869,8 @@ impl State {
   //===========================================================================
   /// Maps to `lua_error`.
   pub fn error(&mut self) -> ! {
-<<<<<<< HEAD
-    unsafe { ffi::lua_error(self.L) }
-=======
     unsafe { ffi::lua_error(self.L) };
     unreachable!()
->>>>>>> upstream/master
   }
 
   /// Maps to `lua_next`.
@@ -1006,41 +990,6 @@ impl State {
     unsafe { ffi::lua_pushglobaltable(self.L) };
   }
 
-<<<<<<< HEAD
-  /// Maps to `lua_tostring`. This function is not called `to_string` because
-  /// that method name is used for the `ToString` trait. This function makes a
-  /// copy of the string on top of the stack and returns it as an owned `String`.
-  pub fn to_str(&mut self, index: Index) -> Option<String> {
-    let ptr = unsafe { ffi::lua_tostring(self.L, index) };
-    if ptr.is_null() {
-      None
-    } else {
-      let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
-      str::from_utf8(slice).map(|s| s.to_owned()).ok()
-    }
-  }
-
-  pub fn push_lstring(&mut self, s: &str) -> *const c_char {
-    #![inline]
-    unsafe { ffi::lua_pushlstring(self.L, s.as_ptr() as *const c_char, s.len() as size_t) }
-  }
-
-  pub fn to_lstring<'a>(&'a mut self, idx: Index) -> Option<&'a str> {
-    #![inline]
-    {
-      let mut sz: size_t = 0;
-      let s = unsafe { ffi::lua_tolstring(self.L, idx, &mut sz) };
-      if s.is_null() {
-        None
-      } else {
-        let buf = s as *const u8;
-        Some(unsafe { slice::from_raw_parts(buf, sz as usize) })
-      }
-    }.and_then(|v| str::from_utf8(v).ok())
-  }
-
-=======
->>>>>>> upstream/master
   /// Maps to `lua_insert`.
   pub fn insert(&mut self, idx: Index) {
     unsafe { ffi::lua_insert(self.L, idx) }
@@ -1502,16 +1451,9 @@ impl State {
   // omitted: luaL_opt (undocumented function)
 
   /// Maps to `luaL_loadbuffer`.
-<<<<<<< HEAD
-  pub fn load_buffer(&mut self, buff: &str, sz: size_t, name: &str) -> ThreadStatus {
-    let bp = buff.as_ptr() as *const c_char;
-    let name_c_str = CString::new(name).unwrap();
-    let result = unsafe { ffi::luaL_loadbuffer(self.L, bp, sz, name_c_str.as_ptr()) };
-=======
   pub fn load_buffer(&mut self, buff: &[u8], name: &str) -> ThreadStatus {
     let name_c_str = CString::new(name).unwrap();
     let result = unsafe { ffi::luaL_loadbuffer(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr()) };
->>>>>>> upstream/master
     ThreadStatus::from_c_int(result).unwrap()
   }
 

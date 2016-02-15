@@ -80,24 +80,42 @@ fn fetch_in_dir(url: &str, cwd: &Path) -> io::Result<()> {
 /// will download Lua and build it. The cargo configuration text to link
 /// statically against lua.a is then printed to stdout.
 fn prebuild() -> io::Result<()> {
+    let lua_version = match env::var_os("LUA_VERSION") {
+        Some(lua_version) => lua_version,
+        None => From::from("5.3.0"),
+    };
+    let lua_version = lua_version.to_str().unwrap();
     let build_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let tooling = gcc::Config::new().get_compiler();
 
     // Ensure the presence of liblua.a
-    if !fs::metadata(build_dir.join("lua-5.3.0/src/liblua.a")).is_ok() {
+    if !fs::metadata(build_dir.join(&format!("lua-{}/src/liblua.a", lua_version))).is_ok() {
         try!(fs::create_dir_all(&build_dir));
 
         // Download lua if it hasn't been already
-        if !fs::metadata(build_dir.join("lua-5.3.0.tar.gz")).is_ok() {
-            try!(fetch_in_dir("http://www.lua.org/ftp/lua-5.3.0.tar.gz", &build_dir));
+        if !fs::metadata(build_dir.join(&format!("lua-{}.tar.gz", lua_version))).is_ok() {
+            match env::var("LUA_LOCAL_SOURCE") {
+                Ok(lua_source_path) => {
+                    try!(Command::new("cp")
+                         .arg(&format!("{}/lua-{}.tar.gz", lua_source_path, lua_version))
+                         .arg(".")
+                         .current_dir(&build_dir)
+                         .execute());
+                    panic!("1!");
+                }
+                Err(_) => {
+                    try!(fetch_in_dir(&format!(
+                        "http://www.lua.org/ftp/lua-{}.tar.gz", lua_version), &build_dir));
+                }
+            }
             try!(Command::new("tar")
                 .arg("xzf")
-                .arg("lua-5.3.0.tar.gz")
+                .arg(&format!("lua-{}.tar.gz", lua_version))
                 .current_dir(&build_dir)
                 .execute());
         }
         // Compile lua
-        try!(build_lua(&tooling, &build_dir.join("lua-5.3.0")));
+        try!(build_lua(&tooling, &build_dir.join(&format!("lua-{}", lua_version))));
     }
 
     // Ensure the presence of glue.rs
@@ -105,7 +123,7 @@ fn prebuild() -> io::Result<()> {
         // Compile glue.c
         let glue = build_dir.join("glue");
         try!(Command::new("gcc")
-            .arg("-I").arg(build_dir.join("lua-5.3.0/src"))
+            .arg("-I").arg(build_dir.join(&format!("lua-{}/src", lua_version)))
             .arg("src/glue/glue.c")
             .arg("-o").arg(&glue)
             .execute());
@@ -116,7 +134,7 @@ fn prebuild() -> io::Result<()> {
 
     // Output build information
     println!("cargo:rustc-link-lib=static=lua");
-    println!("cargo:rustc-link-search=native={}/lua-5.3.0/src", build_dir.to_str().unwrap());
+    println!("cargo:rustc-link-search=native={}/lua-{}/src", build_dir.to_str().unwrap(), lua_version);
 
     Ok(())
 }
