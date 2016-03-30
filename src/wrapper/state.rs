@@ -153,6 +153,59 @@ impl Type {
   }
 }
 
+/// Represents all built-in libraries
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Library {
+  Base,
+  Coroutine,
+  Table,
+  Io,
+  Os,
+  String,
+  Utf8,
+  Bit32,
+  Math,
+  Debug,
+  Package,
+}
+
+impl Library {
+  /// The name of the module in lua code
+  pub fn name(&self) -> &'static str {
+    use self::Library::*;
+    match *self {
+      Base => "_G",
+      Coroutine => "coroutine",
+      Table => "table",
+      Io => "io",
+      Os => "os",
+      String => "string",
+      Utf8 => "utf8",
+      Bit32 => "bit32",
+      Math => "math",
+      Debug => "debug",
+      Package => "package",
+    }
+  }
+  /// Returns C function that may be used to load the library
+  pub fn loader(&self) -> unsafe extern fn (L: *mut lua_State) -> c_int {
+    use self::Library::*;
+    match *self {
+      Base => ffi::luaopen_base,
+      Coroutine => ffi::luaopen_coroutine,
+      Table => ffi::luaopen_table,
+      Io => ffi::luaopen_io,
+      Os => ffi::luaopen_os,
+      String => ffi::luaopen_string,
+      Utf8 => ffi::luaopen_utf8,
+      Bit32 => ffi::luaopen_bit32,
+      Math => ffi::luaopen_math,
+      Debug => ffi::luaopen_debug,
+      Package => ffi::luaopen_package,
+    }
+  }
+}
+
 /// Type of Lua references generated through `reference` and `unreference`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Reference(c_int);
@@ -254,6 +307,23 @@ impl State {
   /// Maps to `luaL_openlibs`.
   pub fn open_libs(&mut self) {
     unsafe { ffi::luaL_openlibs(self.L) }
+  }
+
+  /// Preloads library, i.e. it's not exposed, but can be required
+  pub fn preload_library(&mut self, lib: Library) {
+    unsafe {
+      let pre = CString::new("_PRELOAD").unwrap();
+      ffi::luaL_getsubtable(self.L, ffi::LUA_REGISTRYINDEX, pre.as_ptr());
+      self.push_fn(Some(lib.loader()));
+      self.set_field(-2, lib.name());
+      self.pop(1);  /* remove lib */
+    }
+  }
+
+  /// Loads a built-in library and exposes it into lua code
+  pub fn load_library(&mut self, lib: Library) {
+    self.requiref(lib.name(), Some(lib.loader()), true);
+    self.pop(1);  /* remove lib */
   }
 
   /// Maps to `luaopen_base`.

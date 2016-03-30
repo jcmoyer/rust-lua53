@@ -35,6 +35,7 @@ pub use wrapper::state::{
   ThreadStatus,
   GcOption,
   Type,
+  Library,
 
   Reference,
   REFNIL, NOREF,
