@@ -32,7 +32,6 @@ pub use super::glue::{LUA_MININTEGER, LUA_MAXINTEGER};
 
 pub use super::glue::LUAI_MAXSTACK;
 pub use super::glue::LUAL_NUMSIZES;
-pub use super::glue::LUAI_FIRSTPSEUDOIDX;
 
 pub use super::glue::LUA_KCONTEXT;
 

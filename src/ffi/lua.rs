@@ -28,14 +28,12 @@ use std::ptr;
 
 pub use super::glue::{LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_NUM, LUA_VERSION_RELEASE};
 pub use super::glue::{LUA_VERSION, LUA_RELEASE, LUA_COPYRIGHT, LUA_AUTHORS};
+pub use super::glue::{LUA_REGISTRYINDEX};
 
 pub const LUA_SIGNATURE: &'static [u8] = b"\x1bLua";
 
 // option for multiple returns in 'lua_pcall' and 'lua_call'
 pub const LUA_MULTRET: c_int = -1;
-
-// pseudo-indices
-pub const LUA_REGISTRYINDEX: c_int = luaconf::LUAI_FIRSTPSEUDOIDX;
 
 #[inline(always)]
 pub fn lua_upvalueindex(i: c_int) -> c_int {

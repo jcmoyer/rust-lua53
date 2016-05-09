@@ -28,6 +28,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
+#include <llimits.h>
 
 // Macros taken from https://gcc.gnu.org/onlinedocs/cpp/Stringification.html
 #define xstr(s) str(s)
@@ -196,7 +197,6 @@ int main(int argc, const char** argv) {
     RS_INT("LUAI_BITSINT", LUAI_BITSINT),
     // LUA_INT32? LUAI_UMEM? LUAI_MEM?
     RS_INT("LUAI_MAXSTACK", LUAI_MAXSTACK),
-    RS_INT("LUAI_FIRSTPSEUDOIDX", LUAI_FIRSTPSEUDOIDX),
     RS_INT("LUAL_BUFFERSIZE", LUAL_BUFFERSIZE),
     RS_TYPE("LUA_NUMBER",
       sizeof(LUA_NUMBER) > sizeof(float) ? "c_double" : "c_float"),
@@ -216,6 +216,7 @@ int main(int argc, const char** argv) {
     RS_STR("LUA_RELEASE", LUA_RELEASE),
     RS_STR("LUA_COPYRIGHT", LUA_COPYRIGHT),
     RS_STR("LUA_AUTHORS", LUA_AUTHORS),
+    RS_INT("LUA_REGISTRYINDEX", LUA_REGISTRYINDEX),
 
     // == lauxlib.h ===========================================================
 
