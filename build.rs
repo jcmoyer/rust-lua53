@@ -82,7 +82,7 @@ fn fetch_in_dir(url: &str, cwd: &Path) -> io::Result<()> {
 fn prebuild() -> io::Result<()> {
     let lua_version = match env::var_os("LUA_VERSION") {
         Some(lua_version) => lua_version,
-        None => From::from("5.3.0"),
+        None => From::from("5.3.2"),
     };
     let lua_version = lua_version.to_str().unwrap();
     let lua_dir = format!("lua-{}", lua_version);
