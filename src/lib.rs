@@ -20,6 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+//! Rust bindings for Lua 5.3 and beyond documentation.
+//! Original Lua library documentation [here](https://www.lua.org/manual/5.3/).
+
 #![crate_name = "lua"]
 #![crate_type = "lib"]
 
