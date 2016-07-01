@@ -284,6 +284,8 @@ pub struct State {
   owned: bool
 }
 
+unsafe impl Send for State {}
+
 impl State {
   /// Initializes a new Lua state. This function does not open any libraries
   /// by default. Calls `luaL_newstate` internally.
