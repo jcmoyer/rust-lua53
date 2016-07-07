@@ -576,9 +576,13 @@ impl State {
   }
 
   /// Convenience function that calls `to_userdata` and performs a cast.
-  //#[unstable(reason="this is an experimental function")]
   pub unsafe fn to_userdata_typed<'a, T>(&'a mut self, index: Index) -> Option<&'a mut T> {
-    mem::transmute(self.to_userdata(index))
+    let ptr = self.to_userdata(index);
+    if ptr.is_null() {
+      None
+    } else {
+      Some(mem::transmute(ptr))
+    }
   }
 
   /// Maps to `lua_tothread`.
