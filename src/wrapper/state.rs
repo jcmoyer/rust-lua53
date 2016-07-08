@@ -982,7 +982,27 @@ impl State {
   // Some useful macros (here implemented as functions)
   //===========================================================================
 
-  // omitted: lua_getextraspace
+  /// Move value and attach to extra field of state to `lua_getextraspace` pointer.
+  pub fn attach_extra<T>(&mut self, data: T) {
+    let boxed = Box::new(data);
+    unsafe {
+      let mut extra = ffi::lua_getextraspace(self.L) as *mut *mut T;
+      *extra = Box::into_raw(boxed);
+    }
+  }
+
+  /// Move extra value back.
+  pub unsafe fn detach_extra<T>(&mut self) -> T {
+    let mut extra = ffi::lua_getextraspace(self.L) as *mut *mut T;
+    let result = Box::from_raw(*extra);
+    *extra = ptr::null::<T>() as *mut T;
+    *result
+  }
+
+  /// Get raw pointer to extra value.
+  pub unsafe fn get_extra<T>(&mut self) -> *mut T {
+    *(ffi::lua_getextraspace(self.L) as *mut *mut T)
+  }
 
   /// Maps to `lua_tonumber`.
   pub fn to_number(&mut self, index: Index) -> Number {
