@@ -266,6 +266,20 @@ unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::l
   mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
 }
 
+#[inline]
+unsafe extern "C" fn native_alloc(_: *mut c_void, ptr: *mut c_void, osize: size_t, nsize: size_t) -> *mut c_void {
+  use libc::*;
+  use alloc::heap::*;
+  if nsize == 0 {
+    deallocate(ptr as *mut u8, osize, 0);
+    ptr::null::<c_void>() as *mut c_void
+  } else if ptr.is_null() {
+    allocate(nsize, 0) as *mut c_void
+  } else {
+    reallocate(ptr as *mut u8, osize, nsize, 0) as *mut c_void
+  }
+}
+
 /// An idiomatic, Rust wrapper around `lua_State`.
 ///
 /// Function names adhere to Rust naming conventions. Most of the time, this
@@ -291,6 +305,15 @@ impl State {
   /// by default. Calls `luaL_newstate` internally.
   pub fn new() -> State {
     let state = unsafe { ffi::luaL_newstate() };
+    State { L: state, owned: true }
+  }
+
+  /// Initializes a new Lua state with a default Rust's allocator.
+  //#[cfg(feature="alloc")]
+  pub fn new_native() -> State {
+    let state = unsafe {
+        ffi::lua_newstate(Some(native_alloc), ptr::null::<c_void>() as *mut c_void)
+    };
     State { L: state, owned: true }
   }
 

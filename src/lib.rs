@@ -25,10 +25,13 @@
 
 #![crate_name = "lua"]
 #![crate_type = "lib"]
+#![feature(alloc, heap_api, test)]
 
+extern crate alloc;
 extern crate libc;
 #[macro_use]
 extern crate bitflags;
+extern crate test;
 
 pub use wrapper::state::{
   State,
@@ -69,3 +72,7 @@ mod wrapper;
 
 #[doc(hidden)]
 pub mod macros;
+
+
+#[cfg(test)]
+mod tests;
