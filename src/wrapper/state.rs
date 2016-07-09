@@ -24,7 +24,7 @@ use ffi;
 use ffi::{lua_State, lua_Debug};
 
 use libc::{c_int, c_void, c_char, size_t};
-use std::{mem, ptr, str, slice};
+use std::{mem, ptr, str, slice, any};
 use std::ffi::{CString, CStr};
 use super::convert::{ToLua, FromLua};
 
@@ -266,6 +266,9 @@ unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::l
   mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
 }
 
+/// Box for extra data.
+pub type Extra = Box<any::Any + 'static + Send>;
+
 /// An idiomatic, Rust wrapper around `lua_State`.
 ///
 /// Function names adhere to Rust naming conventions. Most of the time, this
@@ -290,8 +293,10 @@ impl State {
   /// Initializes a new Lua state. This function does not open any libraries
   /// by default. Calls `luaL_newstate` internally.
   pub fn new() -> State {
-    let state = unsafe { ffi::luaL_newstate() };
-    State { L: state, owned: true }
+    let l = unsafe { ffi::luaL_newstate() };
+    let mut state = State { L: l, owned: true };
+    unsafe { state.reset_extra() };
+    state
   }
 
   /// Constructs a wrapper `State` from a raw pointer. This is suitable for use
@@ -425,7 +430,11 @@ impl State {
 
   /// Maps to `lua_newthread`.
   pub fn new_thread(&mut self) -> State {
-    unsafe { State::from_ptr(ffi::lua_newthread(self.L)) }
+    unsafe {
+      let mut state = State::from_ptr(ffi::lua_newthread(self.L));
+      state.reset_extra();
+      state
+    }
   }
 
   /// Maps to `lua_atpanic`.
@@ -982,26 +991,40 @@ impl State {
   // Some useful macros (here implemented as functions)
   //===========================================================================
 
+  #[inline]
+  unsafe fn reset_extra(&mut self) {
+      let mut pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      *pointer = ptr::null::<Extra>() as *mut Extra;
+  }
+
   /// Move value and attach to extra field of state to `lua_getextraspace` pointer.
-  pub fn attach_extra<T>(&mut self, data: T) {
-    let boxed = Box::new(data);
+  pub fn attach_extra(&mut self, extra: Extra) {
+    let _ = self.detach_extra();
     unsafe {
-      let mut extra = ffi::lua_getextraspace(self.L) as *mut *mut T;
-      *extra = Box::into_raw(boxed);
+      let mut pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      *pointer = Box::into_raw(Box::new(extra));
     }
   }
 
   /// Move extra value back.
-  pub unsafe fn detach_extra<T>(&mut self) -> T {
-    let mut extra = ffi::lua_getextraspace(self.L) as *mut *mut T;
-    let result = Box::from_raw(*extra);
-    *extra = ptr::null::<T>() as *mut T;
-    *result
+  pub fn detach_extra(&mut self) -> Option<Extra> {
+    unsafe {
+      let pointer = *(ffi::lua_getextraspace(self.L) as *mut *mut Extra);
+      if pointer.is_null() {
+          return None
+      }
+      let result = Box::from_raw(pointer);
+      self.reset_extra();
+      mem::transmute(*result)
+    }
   }
 
   /// Get raw pointer to extra value.
-  pub unsafe fn get_extra<T>(&mut self) -> *mut T {
-    *(ffi::lua_getextraspace(self.L) as *mut *mut T)
+  pub fn get_extra(&mut self) -> Option<&mut Extra> {
+    unsafe {
+        let pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+        mem::transmute(*pointer)
+    }
   }
 
   /// Maps to `lua_tonumber`.
@@ -1555,6 +1578,7 @@ impl State {
 impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
+      let _ = self.detach_extra();
       unsafe { ffi::lua_close(self.L) }
     }
   }

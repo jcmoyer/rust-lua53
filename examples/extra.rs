@@ -1,24 +1,36 @@
 extern crate lua;
 
-struct Extra {
+struct ExtraData {
     value: String,
 }
 
 fn main() {
-  let mut state = lua::State::new();
-  let extra = Extra {
-      value: "I'm extra".to_string(),
-  };
+    let mut state = lua::State::new();
+    let extra = Box::new(ExtraData {
+        value: "I'm extra".to_string(),
+    });
 
-  state.open_libs();
-  state.attach_extra(extra);
+    state.open_libs();
 
-  unsafe {
-    let ref mut extra = *state.get_extra::<Extra>();
-    println!("Value (by ref): {}", extra.value);
-    extra.value = "I was changed!".to_string();
+    assert!(state.get_extra().is_none());
+    assert!(state.detach_extra().is_none());
 
-    let extra = state.detach_extra::<Extra>();
-    println!("Value (by val): {}", extra.value);
-  }
+    state.attach_extra(extra);
+
+    {
+        let extra = state.get_extra()
+            .and_then(|a| a.downcast_mut::<ExtraData>()).unwrap();
+        println!("Value (by ref): {}", extra.value);
+        extra.value = "I was changed!".to_string();
+    }
+
+    {
+        let extra = state.detach_extra().unwrap();
+        let extra = extra.downcast_ref::<ExtraData>().unwrap();
+        println!("Value (by val): {}", extra.value);
+    }
+
+    assert!(state.get_extra().is_none());
+    assert!(state.detach_extra().is_none());
+
 }
