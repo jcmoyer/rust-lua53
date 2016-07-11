@@ -993,28 +993,24 @@ impl State {
 
   #[inline]
   unsafe fn reset_extra(&mut self) {
-      let mut pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      *pointer = ptr::null::<Extra>() as *mut Extra;
+    let mut pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+    *pointer = ptr::null::<Extra>() as *mut Extra;
   }
 
-  /// Move value and attach to extra field of state to `lua_getextraspace` pointer.
-  pub fn attach_extra(&mut self, extra: Extra) {
-    let _ = self.detach_extra();
+  /// Set extra data. Return previous value if it was set.
+  pub fn set_extra(&mut self, extra: Option<Extra>) -> Option<Extra> {
     unsafe {
-      let mut pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      *pointer = Box::into_raw(Box::new(extra));
-    }
-  }
-
-  /// Move extra value back.
-  pub fn detach_extra(&mut self) -> Option<Extra> {
-    unsafe {
-      let pointer = *(ffi::lua_getextraspace(self.L) as *mut *mut Extra);
-      if pointer.is_null() {
+      let pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      let last = *pointer;
+      if let Some(extra) = extra {
+          *pointer = Box::into_raw(Box::new(extra));
+      } else {
+        *pointer = ptr::null::<Extra>() as *mut Extra;
+      }
+      if last.is_null() {
           return None
       }
-      let result = Box::from_raw(pointer);
-      self.reset_extra();
+      let result = Box::from_raw(last);
       mem::transmute(*result)
     }
   }
@@ -1022,8 +1018,8 @@ impl State {
   /// Get raw pointer to extra value.
   pub fn get_extra(&mut self) -> Option<&mut Extra> {
     unsafe {
-        let pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-        mem::transmute(*pointer)
+      let pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      mem::transmute(*pointer)
     }
   }
 
@@ -1578,7 +1574,7 @@ impl State {
 impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
-      let _ = self.detach_extra();
+      let _ = self.set_extra(None);
       unsafe { ffi::lua_close(self.L) }
     }
   }
