@@ -22,7 +22,7 @@ fn check(state: &mut lua::State) {
 
     {
         let extra = state.set_extra(None).unwrap();
-        let extra = extra.downcast_ref::<ExtraData>().unwrap();
+        let extra = extra.downcast::<ExtraData>().unwrap();
         assert_eq!(extra.value, "Changed to 9");
     }
 
@@ -55,4 +55,3 @@ fn test_extra_no_impact() {
     check(&mut thread);
     assert!(state.get_extra().is_none());
 }
-
