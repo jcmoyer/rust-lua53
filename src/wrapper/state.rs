@@ -293,10 +293,11 @@ impl State {
   /// Initializes a new Lua state. This function does not open any libraries
   /// by default. Calls `luaL_newstate` internally.
   pub fn new() -> State {
-    let l = unsafe { ffi::luaL_newstate() };
-    let mut state = State { L: l, owned: true };
-    unsafe { state.reset_extra() };
-    state
+    unsafe {
+      let mut state = State { L: ffi::luaL_newstate(), owned: true };
+      state.reset_extra();
+      state
+    }
   }
 
   /// Constructs a wrapper `State` from a raw pointer. This is suitable for use
@@ -993,33 +994,37 @@ impl State {
 
   #[inline]
   unsafe fn reset_extra(&mut self) {
-    let mut pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-    *pointer = ptr::null::<Extra>() as *mut Extra;
+    let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+    *space_ptr = ptr::null_mut();
   }
 
   /// Set extra data. Return previous value if it was set.
   pub fn set_extra(&mut self, extra: Option<Extra>) -> Option<Extra> {
     unsafe {
-      let pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      let last = *pointer;
-      if let Some(extra) = extra {
-          *pointer = Box::into_raw(Box::new(extra));
+      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      let new_value = match extra {
+        Some(extra) => Box::into_raw(Box::new(extra)),
+        None => ptr::null_mut(),
+      };
+      let old_value = ptr::replace(space_ptr, new_value);
+      if old_value.is_null() {
+        None
       } else {
-        *pointer = ptr::null::<Extra>() as *mut Extra;
+        Some(*Box::from_raw(old_value))
       }
-      if last.is_null() {
-          return None
-      }
-      let result = Box::from_raw(last);
-      mem::transmute(*result)
     }
   }
 
-  /// Get raw pointer to extra value.
-  pub fn get_extra(&mut self) -> Option<&mut Extra> {
+  /// Get the currently set extra data, if any.
+  pub fn get_extra(&mut self) -> Option<&mut (any::Any + 'static + Send)> {
     unsafe {
-      let pointer = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      mem::transmute(*pointer)
+      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      let box_ptr = *space_ptr;
+      if box_ptr.is_null() {
+        None
+      } else {
+        Some(&mut **box_ptr)
+      }
     }
   }
 
