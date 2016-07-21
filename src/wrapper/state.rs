@@ -24,7 +24,7 @@ use ffi;
 use ffi::{lua_State, lua_Debug};
 
 use libc::{c_int, c_void, c_char, size_t};
-use std::{mem, ptr, str, slice};
+use std::{mem, ptr, str, slice, any};
 use std::ffi::{CString, CStr};
 use super::convert::{ToLua, FromLua};
 
@@ -266,6 +266,9 @@ unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::l
   mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
 }
 
+/// Box for extra data.
+pub type Extra = Box<any::Any + 'static + Send>;
+
 /// An idiomatic, Rust wrapper around `lua_State`.
 ///
 /// Function names adhere to Rust naming conventions. Most of the time, this
@@ -290,8 +293,11 @@ impl State {
   /// Initializes a new Lua state. This function does not open any libraries
   /// by default. Calls `luaL_newstate` internally.
   pub fn new() -> State {
-    let state = unsafe { ffi::luaL_newstate() };
-    State { L: state, owned: true }
+    unsafe {
+      let mut state = State { L: ffi::luaL_newstate(), owned: true };
+      state.reset_extra();
+      state
+    }
   }
 
   /// Constructs a wrapper `State` from a raw pointer. This is suitable for use
@@ -425,7 +431,11 @@ impl State {
 
   /// Maps to `lua_newthread`.
   pub fn new_thread(&mut self) -> State {
-    unsafe { State::from_ptr(ffi::lua_newthread(self.L)) }
+    unsafe {
+      let mut state = State::from_ptr(ffi::lua_newthread(self.L));
+      state.reset_extra();
+      state
+    }
   }
 
   /// Maps to `lua_atpanic`.
@@ -982,7 +992,41 @@ impl State {
   // Some useful macros (here implemented as functions)
   //===========================================================================
 
-  // omitted: lua_getextraspace
+  #[inline]
+  unsafe fn reset_extra(&mut self) {
+    let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+    *space_ptr = ptr::null_mut();
+  }
+
+  /// Set extra data. Return previous value if it was set.
+  pub fn set_extra(&mut self, extra: Option<Extra>) -> Option<Extra> {
+    unsafe {
+      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      let new_value = match extra {
+        Some(extra) => Box::into_raw(Box::new(extra)),
+        None => ptr::null_mut(),
+      };
+      let old_value = ptr::replace(space_ptr, new_value);
+      if old_value.is_null() {
+        None
+      } else {
+        Some(*Box::from_raw(old_value))
+      }
+    }
+  }
+
+  /// Get the currently set extra data, if any.
+  pub fn get_extra(&mut self) -> Option<&mut (any::Any + 'static + Send)> {
+    unsafe {
+      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
+      let box_ptr = *space_ptr;
+      if box_ptr.is_null() {
+        None
+      } else {
+        Some(&mut **box_ptr)
+      }
+    }
+  }
 
   /// Maps to `lua_tonumber`.
   pub fn to_number(&mut self, index: Index) -> Number {
@@ -1535,6 +1579,7 @@ impl State {
 impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
+      let _ = self.set_extra(None);
       unsafe { ffi::lua_close(self.L) }
     }
   }
