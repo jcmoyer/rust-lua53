@@ -26,7 +26,7 @@
 #![crate_name = "lua"]
 #![crate_type = "lib"]
 
-extern crate libc;
+pub extern crate libc;
 #[macro_use]
 extern crate bitflags;
 
