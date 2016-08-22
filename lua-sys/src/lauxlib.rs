@@ -23,13 +23,16 @@
 //! Contains definitions from `lauxlib.h`.
 
 use libc::{c_int, c_long, c_char, c_void, size_t};
-use ffi::lua;
-use ffi::lua::{lua_State, lua_CFunction, lua_Integer, lua_Number};
-use ffi::luaconf::LUAL_BUFFERSIZE;
+use lua;
+use lua::{lua_State, lua_CFunction, lua_Integer, lua_Number};
+use luaconf::LUAL_BUFFERSIZE;
+#[cfg(feature = "no_std")]
+use core::ptr;
+#[cfg(not(feature = "no_std"))]
 use std::ptr;
 
-pub use super::glue::LUAL_NUMSIZES;
-pub use super::glue::LUA_FILEHANDLE;
+pub use glue::LUAL_NUMSIZES;
+pub use glue::LUA_FILEHANDLE;
 
 // extra error code for 'luaL_load'
 pub const LUA_ERRFILE: c_int = lua::LUA_ERRERR + 1;

@@ -22,13 +22,16 @@
 
 //! Contains definitions from `lua.h`.
 
-use libc::{c_void, c_int, c_char, c_uchar, size_t};
-use ffi::luaconf;
+#[cfg(feature = "no_std")]
+use core::ptr;
+#[cfg(not(feature = "no_std"))]
 use std::ptr;
+use libc::{c_void, c_int, c_char, c_uchar, size_t};
+use luaconf;
 
-pub use super::glue::{LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_NUM, LUA_VERSION_RELEASE};
-pub use super::glue::{LUA_VERSION, LUA_RELEASE, LUA_COPYRIGHT, LUA_AUTHORS};
-pub use super::glue::{LUA_REGISTRYINDEX};
+pub use glue::{LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_NUM, LUA_VERSION_RELEASE};
+pub use glue::{LUA_VERSION, LUA_RELEASE, LUA_COPYRIGHT, LUA_AUTHORS};
+pub use glue::{LUA_REGISTRYINDEX};
 
 pub const LUA_SIGNATURE: &'static [u8] = b"\x1bLua";
 
@@ -350,11 +353,22 @@ pub unsafe fn lua_isnoneornil(L: *mut lua_State, n: c_int) -> c_int {
 }
 
 // TODO: Test
+#[cfg(not(feature = "no_std"))]
 #[inline(always)]
 pub unsafe fn lua_pushliteral(L: *mut lua_State, s: &'static str) -> *const c_char {
   use std::ffi::CString;
+
   let c_str = CString::new(s).unwrap();
   lua_pushlstring(L, c_str.as_ptr(), c_str.as_bytes().len() as size_t)
+}
+
+#[cfg(feature = "no_std")]
+#[inline(always)]
+pub unsafe fn lua_pushliteral(L: *mut lua_State, s: &'static str) -> *const c_char {
+  use rcstring::CString;
+
+  let c_str = CString::new(s).unwrap();
+  lua_pushlstring(L, c_str.into_raw(), c_str.len() as size_t)
 }
 
 #[inline(always)]
