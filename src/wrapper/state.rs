@@ -65,6 +65,7 @@ pub enum Comparison {
 }
 
 /// Status of a Lua state.
+#[must_use]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ThreadStatus {
   Ok = ffi::LUA_OK as isize,
@@ -78,17 +79,17 @@ pub enum ThreadStatus {
 }
 
 impl ThreadStatus {
-  fn from_c_int(i: c_int) -> Option<ThreadStatus> {
+  fn from_c_int(i: c_int) -> ThreadStatus {
     match i {
-      ffi::LUA_OK => Some(ThreadStatus::Ok),
-      ffi::LUA_YIELD => Some(ThreadStatus::Yield),
-      ffi::LUA_ERRRUN => Some(ThreadStatus::RuntimeError),
-      ffi::LUA_ERRSYNTAX => Some(ThreadStatus::SyntaxError),
-      ffi::LUA_ERRMEM => Some(ThreadStatus::MemoryError),
-      ffi::LUA_ERRGCMM => Some(ThreadStatus::GcError),
-      ffi::LUA_ERRERR => Some(ThreadStatus::MessageHandlerError),
-      ffi::LUA_ERRFILE => Some(ThreadStatus::FileError),
-      _ => None
+      ffi::LUA_OK => ThreadStatus::Ok,
+      ffi::LUA_YIELD => ThreadStatus::Yield,
+      ffi::LUA_ERRRUN => ThreadStatus::RuntimeError,
+      ffi::LUA_ERRSYNTAX => ThreadStatus::SyntaxError,
+      ffi::LUA_ERRMEM => ThreadStatus::MemoryError,
+      ffi::LUA_ERRGCMM => ThreadStatus::GcError,
+      ffi::LUA_ERRERR => ThreadStatus::MessageHandlerError,
+      ffi::LUA_ERRFILE => ThreadStatus::FileError,
+      _ => panic!("Unknown Lua error code: {}", i),
     }
   }
 
@@ -263,7 +264,7 @@ pub const RIDX_GLOBALS: Integer = ffi::LUA_RIDX_GLOBALS;
 unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::lua_KContext) -> c_int
   where F: FnOnce(&mut State, ThreadStatus) -> c_int
 {
-  mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
+  mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status))
 }
 
 /// Box for extra data.
@@ -440,7 +441,7 @@ impl State {
     let result = unsafe {
       ffi::luaL_dofile(self.L, c_str.as_ptr())
     };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   /// Maps to `luaL_dostring`.
@@ -449,7 +450,7 @@ impl State {
     let result = unsafe {
       ffi::luaL_dostring(self.L, c_str.as_ptr())
     };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   /// Pushes the given value onto the stack.
@@ -874,7 +875,7 @@ impl State {
     let func = continue_func::<F>;
     unsafe {
       let ctx = mem::transmute(Box::new(continuation));
-      ffi::lua_callk(self.L, nargs, nresults, ctx, Some(continue_func::<F>));
+      ffi::lua_callk(self.L, nargs, nresults, ctx, Some(func));
       // no yield occurred, so call the continuation
       func(self.L, ffi::LUA_OK, ctx);
     }
@@ -902,7 +903,7 @@ impl State {
     let result = unsafe {
       ffi::lua_pcall(self.L, nargs, nresults, msgh)
     };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   // TODO: mode typing?
@@ -923,7 +924,7 @@ impl State {
     let result = unsafe {
       ffi::lua_load(self.L, Some(read::<F>), mem::transmute(&mut reader), source_c_str.as_ptr(), mode_c_str.as_ptr())
     };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   // returns isize because the return value is dependent on the writer - seems to
@@ -967,13 +968,13 @@ impl State {
     let result = unsafe {
       ffi::lua_resume(self.L, from_ptr, nargs)
     };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   /// Maps to `lua_status`.
   pub fn status(&mut self) -> ThreadStatus {
     let result = unsafe { ffi::lua_status(self.L) };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   /// Maps to `lua_isyieldable`.
@@ -1467,7 +1468,7 @@ impl State {
       let mode_c_str = CString::new(mode).unwrap();
       ffi::luaL_loadfilex(self.L, filename_c_str.as_ptr(), mode_c_str.as_ptr())
     };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   /// Maps to `luaL_loadfile`.
@@ -1476,7 +1477,7 @@ impl State {
     let result = unsafe {
       ffi::luaL_loadfile(self.L, c_str.as_ptr())
     };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   /// Maps to `luaL_loadbufferx`.
@@ -1484,14 +1485,14 @@ impl State {
     let name_c_str = CString::new(name).unwrap();
     let mode_c_str = CString::new(mode).unwrap();
     let result = unsafe { ffi::luaL_loadbufferx(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr(), mode_c_str.as_ptr()) };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   /// Maps to `luaL_loadstring`.
   pub fn load_string(&mut self, source: &str) -> ThreadStatus {
     let c_str = CString::new(source).unwrap();
     let result = unsafe { ffi::luaL_loadstring(self.L, c_str.as_ptr()) };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   // omitted: luaL_newstate (covered by State constructor)
@@ -1615,7 +1616,7 @@ impl State {
   pub fn load_buffer(&mut self, buff: &[u8], name: &str) -> ThreadStatus {
     let name_c_str = CString::new(name).unwrap();
     let result = unsafe { ffi::luaL_loadbuffer(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr()) };
-    ThreadStatus::from_c_int(result).unwrap()
+    ThreadStatus::from_c_int(result)
   }
 
   // TODO: omitted: buffer functions
