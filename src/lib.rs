@@ -25,7 +25,7 @@
 
 #[macro_use]
 extern crate bitflags;
-pub extern crate lua_sys;
+pub extern crate lua_sys as ffi;
 
 
 pub use wrapper::state::{
@@ -53,12 +53,12 @@ pub use wrapper::convert::{
   FromLua
 };
 
-pub use lua_sys::libc;
-pub use lua_sys::lua_Number as Number;
-pub use lua_sys::lua_Integer as Integer;
-pub use lua_sys::lua_CFunction as Function;
-pub use lua_sys::lua_Alloc as Allocator;
-pub use lua_sys::lua_Hook as Hook;
+pub use ffi::libc;
+pub use ffi::lua_Number as Number;
+pub use ffi::lua_Integer as Integer;
+pub use ffi::lua_CFunction as Function;
+pub use ffi::lua_Alloc as Allocator;
+pub use ffi::lua_Hook as Hook;
 
 /// Integer type used to index the Lua stack, usually `i32`.
 pub type Index = libc::c_int;

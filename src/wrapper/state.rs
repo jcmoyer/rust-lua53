@@ -20,9 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-use lua_sys;
-use lua_sys::{lua_State, lua_Debug};
-use lua_sys::libc::{c_int, c_void, c_char, size_t};
+use ffi;
+use ffi::{lua_State, lua_Debug};
+use ffi::libc::{c_int, c_void, c_char, size_t};
 
 use std::{mem, ptr, str, slice, any};
 use std::ffi::{CString, CStr};
@@ -40,54 +40,54 @@ use ::{
 /// Arithmetic operations for `lua_arith`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Arithmetic {
-  Add = lua_sys::LUA_OPADD as isize,
-  Sub = lua_sys::LUA_OPSUB as isize,
-  Mul = lua_sys::LUA_OPMUL as isize,
-  Mod = lua_sys::LUA_OPMOD as isize,
-  Pow = lua_sys::LUA_OPPOW as isize,
-  Div = lua_sys::LUA_OPDIV as isize,
-  IDiv = lua_sys::LUA_OPIDIV as isize,
-  BAnd = lua_sys::LUA_OPBAND as isize,
-  BOr = lua_sys::LUA_OPBOR as isize,
-  BXor = lua_sys::LUA_OPBXOR as isize,
-  Shl = lua_sys::LUA_OPSHL as isize,
-  Shr = lua_sys::LUA_OPSHR as isize,
-  Unm = lua_sys::LUA_OPUNM as isize,
-  BNot = lua_sys::LUA_OPBNOT as isize,
+  Add = ffi::LUA_OPADD as isize,
+  Sub = ffi::LUA_OPSUB as isize,
+  Mul = ffi::LUA_OPMUL as isize,
+  Mod = ffi::LUA_OPMOD as isize,
+  Pow = ffi::LUA_OPPOW as isize,
+  Div = ffi::LUA_OPDIV as isize,
+  IDiv = ffi::LUA_OPIDIV as isize,
+  BAnd = ffi::LUA_OPBAND as isize,
+  BOr = ffi::LUA_OPBOR as isize,
+  BXor = ffi::LUA_OPBXOR as isize,
+  Shl = ffi::LUA_OPSHL as isize,
+  Shr = ffi::LUA_OPSHR as isize,
+  Unm = ffi::LUA_OPUNM as isize,
+  BNot = ffi::LUA_OPBNOT as isize,
 }
 
 /// Comparison operations for `lua_compare`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Comparison {
-  Eq = lua_sys::LUA_OPEQ as isize,
-  Lt = lua_sys::LUA_OPLT as isize,
-  Le = lua_sys::LUA_OPLE as isize,
+  Eq = ffi::LUA_OPEQ as isize,
+  Lt = ffi::LUA_OPLT as isize,
+  Le = ffi::LUA_OPLE as isize,
 }
 
 /// Status of a Lua state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ThreadStatus {
-  Ok = lua_sys::LUA_OK as isize,
-  Yield = lua_sys::LUA_YIELD as isize,
-  RuntimeError = lua_sys::LUA_ERRRUN as isize,
-  SyntaxError = lua_sys::LUA_ERRSYNTAX as isize,
-  MemoryError = lua_sys::LUA_ERRMEM as isize,
-  GcError = lua_sys::LUA_ERRGCMM as isize,
-  MessageHandlerError = lua_sys::LUA_ERRERR as isize,
-  FileError = lua_sys::LUA_ERRFILE as isize,
+  Ok = ffi::LUA_OK as isize,
+  Yield = ffi::LUA_YIELD as isize,
+  RuntimeError = ffi::LUA_ERRRUN as isize,
+  SyntaxError = ffi::LUA_ERRSYNTAX as isize,
+  MemoryError = ffi::LUA_ERRMEM as isize,
+  GcError = ffi::LUA_ERRGCMM as isize,
+  MessageHandlerError = ffi::LUA_ERRERR as isize,
+  FileError = ffi::LUA_ERRFILE as isize,
 }
 
 impl ThreadStatus {
   fn from_c_int(i: c_int) -> Option<ThreadStatus> {
     match i {
-      lua_sys::LUA_OK => Some(ThreadStatus::Ok),
-      lua_sys::LUA_YIELD => Some(ThreadStatus::Yield),
-      lua_sys::LUA_ERRRUN => Some(ThreadStatus::RuntimeError),
-      lua_sys::LUA_ERRSYNTAX => Some(ThreadStatus::SyntaxError),
-      lua_sys::LUA_ERRMEM => Some(ThreadStatus::MemoryError),
-      lua_sys::LUA_ERRGCMM => Some(ThreadStatus::GcError),
-      lua_sys::LUA_ERRERR => Some(ThreadStatus::MessageHandlerError),
-      lua_sys::LUA_ERRFILE => Some(ThreadStatus::FileError),
+      ffi::LUA_OK => Some(ThreadStatus::Ok),
+      ffi::LUA_YIELD => Some(ThreadStatus::Yield),
+      ffi::LUA_ERRRUN => Some(ThreadStatus::RuntimeError),
+      ffi::LUA_ERRSYNTAX => Some(ThreadStatus::SyntaxError),
+      ffi::LUA_ERRMEM => Some(ThreadStatus::MemoryError),
+      ffi::LUA_ERRGCMM => Some(ThreadStatus::GcError),
+      ffi::LUA_ERRERR => Some(ThreadStatus::MessageHandlerError),
+      ffi::LUA_ERRFILE => Some(ThreadStatus::FileError),
       _ => None
     }
   }
@@ -110,44 +110,44 @@ impl ThreadStatus {
 /// Options for the Lua garbage collector.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GcOption {
-  Stop = lua_sys::LUA_GCSTOP as isize,
-  Restart = lua_sys::LUA_GCRESTART as isize,
-  Collect = lua_sys::LUA_GCCOLLECT as isize,
-  Count = lua_sys::LUA_GCCOUNT as isize,
-  CountBytes = lua_sys::LUA_GCCOUNTB as isize,
-  Step = lua_sys::LUA_GCSTEP as isize,
-  SetPause = lua_sys::LUA_GCSETPAUSE as isize,
-  SetStepMul = lua_sys::LUA_GCSETSTEPMUL as isize,
-  IsRunning = lua_sys::LUA_GCISRUNNING as isize,
+  Stop = ffi::LUA_GCSTOP as isize,
+  Restart = ffi::LUA_GCRESTART as isize,
+  Collect = ffi::LUA_GCCOLLECT as isize,
+  Count = ffi::LUA_GCCOUNT as isize,
+  CountBytes = ffi::LUA_GCCOUNTB as isize,
+  Step = ffi::LUA_GCSTEP as isize,
+  SetPause = ffi::LUA_GCSETPAUSE as isize,
+  SetStepMul = ffi::LUA_GCSETSTEPMUL as isize,
+  IsRunning = ffi::LUA_GCISRUNNING as isize,
 }
 
 /// Represents all possible Lua data types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Type {
-  None = lua_sys::LUA_TNONE as isize,
-  Nil = lua_sys::LUA_TNIL as isize,
-  Boolean = lua_sys::LUA_TBOOLEAN as isize,
-  LightUserdata = lua_sys::LUA_TLIGHTUSERDATA as isize,
-  Number = lua_sys::LUA_TNUMBER as isize,
-  String = lua_sys::LUA_TSTRING as isize,
-  Table = lua_sys::LUA_TTABLE as isize,
-  Function = lua_sys::LUA_TFUNCTION as isize,
-  Userdata = lua_sys::LUA_TUSERDATA as isize,
-  Thread = lua_sys::LUA_TTHREAD as isize,
+  None = ffi::LUA_TNONE as isize,
+  Nil = ffi::LUA_TNIL as isize,
+  Boolean = ffi::LUA_TBOOLEAN as isize,
+  LightUserdata = ffi::LUA_TLIGHTUSERDATA as isize,
+  Number = ffi::LUA_TNUMBER as isize,
+  String = ffi::LUA_TSTRING as isize,
+  Table = ffi::LUA_TTABLE as isize,
+  Function = ffi::LUA_TFUNCTION as isize,
+  Userdata = ffi::LUA_TUSERDATA as isize,
+  Thread = ffi::LUA_TTHREAD as isize,
 }
 
 impl Type {
   fn from_c_int(i: c_int) -> Option<Type> {
     match i {
-      lua_sys::LUA_TNIL => Some(Type::Nil),
-      lua_sys::LUA_TBOOLEAN => Some(Type::Boolean),
-      lua_sys::LUA_TLIGHTUSERDATA => Some(Type::LightUserdata),
-      lua_sys::LUA_TNUMBER => Some(Type::Number),
-      lua_sys::LUA_TSTRING => Some(Type::String),
-      lua_sys::LUA_TTABLE => Some(Type::Table),
-      lua_sys::LUA_TFUNCTION => Some(Type::Function),
-      lua_sys::LUA_TUSERDATA => Some(Type::Userdata),
-      lua_sys::LUA_TTHREAD => Some(Type::Thread),
+      ffi::LUA_TNIL => Some(Type::Nil),
+      ffi::LUA_TBOOLEAN => Some(Type::Boolean),
+      ffi::LUA_TLIGHTUSERDATA => Some(Type::LightUserdata),
+      ffi::LUA_TNUMBER => Some(Type::Number),
+      ffi::LUA_TSTRING => Some(Type::String),
+      ffi::LUA_TTABLE => Some(Type::Table),
+      ffi::LUA_TFUNCTION => Some(Type::Function),
+      ffi::LUA_TUSERDATA => Some(Type::Userdata),
+      ffi::LUA_TTHREAD => Some(Type::Thread),
       _ => None
     }
   }
@@ -191,17 +191,17 @@ impl Library {
   pub fn loader(&self) -> unsafe extern fn (L: *mut lua_State) -> c_int {
     use self::Library::*;
     match *self {
-      Base => lua_sys::luaopen_base,
-      Coroutine => lua_sys::luaopen_coroutine,
-      Table => lua_sys::luaopen_table,
-      Io => lua_sys::luaopen_io,
-      Os => lua_sys::luaopen_os,
-      String => lua_sys::luaopen_string,
-      Utf8 => lua_sys::luaopen_utf8,
-      Bit32 => lua_sys::luaopen_bit32,
-      Math => lua_sys::luaopen_math,
-      Debug => lua_sys::luaopen_debug,
-      Package => lua_sys::luaopen_package,
+      Base => ffi::luaopen_base,
+      Coroutine => ffi::luaopen_coroutine,
+      Table => ffi::luaopen_table,
+      Io => ffi::luaopen_io,
+      Os => ffi::luaopen_os,
+      String => ffi::luaopen_string,
+      Utf8 => ffi::luaopen_utf8,
+      Bit32 => ffi::luaopen_bit32,
+      Math => ffi::luaopen_math,
+      Debug => ffi::luaopen_debug,
+      Package => ffi::luaopen_package,
     }
   }
 }
@@ -211,10 +211,10 @@ impl Library {
 pub struct Reference(c_int);
 
 /// The result of `reference` for `nil` values.
-pub const REFNIL: Reference = Reference(lua_sys::LUA_REFNIL);
+pub const REFNIL: Reference = Reference(ffi::LUA_REFNIL);
 
 /// A value that will never be returned by `reference`.
-pub const NOREF: Reference = Reference(lua_sys::LUA_REFNIL);
+pub const NOREF: Reference = Reference(ffi::LUA_REFNIL);
 
 impl Reference {
   /// Returns `true` if this reference is equal to `REFNIL`.
@@ -238,29 +238,29 @@ bitflags! {
   #[doc="Hook point masks for `lua_sethook`."]
   pub flags HookMask: c_int {
     #[doc="Called when the interpreter calls a function."]
-    const MASKCALL  = lua_sys::LUA_MASKCALL,
+    const MASKCALL  = ffi::LUA_MASKCALL,
     #[doc="Called when the interpreter returns from a function."]
-    const MASKRET   = lua_sys::LUA_MASKRET,
+    const MASKRET   = ffi::LUA_MASKRET,
     #[doc="Called when the interpreter is about to start the execution of a new line of code."]
-    const MASKLINE  = lua_sys::LUA_MASKLINE,
+    const MASKLINE  = ffi::LUA_MASKLINE,
     #[doc="Called after the interpreter executes every `count` instructions."]
-    const MASKCOUNT = lua_sys::LUA_MASKCOUNT
+    const MASKCOUNT = ffi::LUA_MASKCOUNT
   }
 }
 
 /// Specifies that all results from a `call` invocation should be pushed onto
 /// the stack.
-pub const MULTRET: c_int = lua_sys::LUA_MULTRET;
+pub const MULTRET: c_int = ffi::LUA_MULTRET;
 
 /// Pseudo-index used to access the Lua registry.
-pub const REGISTRYINDEX: Index = lua_sys::LUA_REGISTRYINDEX;
+pub const REGISTRYINDEX: Index = ffi::LUA_REGISTRYINDEX;
 
 /// The registry key for the main thread, to be used with `raw_geti`.
-pub const RIDX_MAINTHREAD: Integer = lua_sys::LUA_RIDX_MAINTHREAD;
+pub const RIDX_MAINTHREAD: Integer = ffi::LUA_RIDX_MAINTHREAD;
 /// The registry key for the global environment, to be used with `raw_geti`.
-pub const RIDX_GLOBALS: Integer = lua_sys::LUA_RIDX_GLOBALS;
+pub const RIDX_GLOBALS: Integer = ffi::LUA_RIDX_GLOBALS;
 
-unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: lua_sys::lua_KContext) -> c_int
+unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::lua_KContext) -> c_int
   where F: FnOnce(&mut State, ThreadStatus) -> c_int
 {
   mem::transmute::<_, Box<F>>(ctx)(&mut State::from_ptr(st), ThreadStatus::from_c_int(status).unwrap())
@@ -338,7 +338,7 @@ impl State {
   /// by default. Calls `lua_newstate` internally.
   pub fn new() -> State {
     unsafe {
-      let state = lua_sys::lua_newstate(Some(alloc_func), ptr::null_mut());
+      let state = ffi::lua_newstate(Some(alloc_func), ptr::null_mut());
       let mut state = State { L: state, owned: true };
       state.reset_extra();
       state
@@ -359,14 +359,14 @@ impl State {
 
   /// Maps to `luaL_openlibs`.
   pub fn open_libs(&mut self) {
-    unsafe { lua_sys::luaL_openlibs(self.L) }
+    unsafe { ffi::luaL_openlibs(self.L) }
   }
 
   /// Preloads library, i.e. it's not exposed, but can be required
   pub fn preload_library(&mut self, lib: Library) {
     unsafe {
       let pre = CString::new("_PRELOAD").unwrap();
-      lua_sys::luaL_getsubtable(self.L, lua_sys::LUA_REGISTRYINDEX, pre.as_ptr());
+      ffi::luaL_getsubtable(self.L, ffi::LUA_REGISTRYINDEX, pre.as_ptr());
       self.push_fn(Some(lib.loader()));
       self.set_field(-2, lib.name());
       self.pop(1);  /* remove lib */
@@ -381,64 +381,64 @@ impl State {
 
   /// Maps to `luaopen_base`.
   pub fn open_base(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_base(self.L) }
+    unsafe { ffi::luaopen_base(self.L) }
   }
 
   /// Maps to `luaopen_coroutine`.
   pub fn open_coroutine(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_coroutine(self.L) }
+    unsafe { ffi::luaopen_coroutine(self.L) }
   }
 
   /// Maps to `luaopen_table`.
   pub fn open_table(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_table(self.L) }
+    unsafe { ffi::luaopen_table(self.L) }
   }
 
   /// Maps to `luaopen_io`.
   pub fn open_io(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_io(self.L) }
+    unsafe { ffi::luaopen_io(self.L) }
   }
 
   /// Maps to `luaopen_os`.
   pub fn open_os(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_os(self.L) }
+    unsafe { ffi::luaopen_os(self.L) }
   }
 
   /// Maps to `luaopen_string`.
   pub fn open_string(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_string(self.L) }
+    unsafe { ffi::luaopen_string(self.L) }
   }
 
   /// Maps to `luaopen_utf8`.
   pub fn open_utf8(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_utf8(self.L) }
+    unsafe { ffi::luaopen_utf8(self.L) }
   }
 
   /// Maps to `luaopen_bit32`.
   pub fn open_bit32(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_bit32(self.L) }
+    unsafe { ffi::luaopen_bit32(self.L) }
   }
 
   /// Maps to `luaopen_math`.
   pub fn open_math(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_math(self.L) }
+    unsafe { ffi::luaopen_math(self.L) }
   }
 
   /// Maps to `luaopen_debug`.
   pub fn open_debug(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_debug(self.L) }
+    unsafe { ffi::luaopen_debug(self.L) }
   }
 
   /// Maps to `luaopen_package`.
   pub fn open_package(&mut self) -> c_int {
-    unsafe { lua_sys::luaopen_package(self.L) }
+    unsafe { ffi::luaopen_package(self.L) }
   }
 
   /// Maps to `luaL_dofile`.
   pub fn do_file(&mut self, filename: &str) -> ThreadStatus {
     let c_str = CString::new(filename).unwrap();
     let result = unsafe {
-      lua_sys::luaL_dofile(self.L, c_str.as_ptr())
+      ffi::luaL_dofile(self.L, c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -447,7 +447,7 @@ impl State {
   pub fn do_string(&mut self, s: &str) -> ThreadStatus {
     let c_str = CString::new(s).unwrap();
     let result = unsafe {
-      lua_sys::luaL_dostring(self.L, c_str.as_ptr())
+      ffi::luaL_dostring(self.L, c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -477,7 +477,7 @@ impl State {
   /// Maps to `lua_newthread`.
   pub fn new_thread(&mut self) -> State {
     unsafe {
-      let mut state = State::from_ptr(lua_sys::lua_newthread(self.L));
+      let mut state = State::from_ptr(ffi::lua_newthread(self.L));
       state.reset_extra();
       state
     }
@@ -485,7 +485,7 @@ impl State {
 
   /// Maps to `lua_atpanic`.
   pub fn at_panic(&mut self, panicf: Function) -> Function {
-    unsafe { lua_sys::lua_atpanic(self.L, panicf) }
+    unsafe { ffi::lua_atpanic(self.L, panicf) }
   }
 
   /// Maps to `lua_version`.
@@ -494,7 +494,7 @@ impl State {
       Some(state) => state.L,
       None        => ptr::null_mut()
     };
-    unsafe { *lua_sys::lua_version(ptr) }
+    unsafe { *ffi::lua_version(ptr) }
   }
 
   //===========================================================================
@@ -502,43 +502,43 @@ impl State {
   //===========================================================================
   /// Maps to `lua_absindex`.
   pub fn abs_index(&mut self, idx: Index) -> Index {
-    unsafe { lua_sys::lua_absindex(self.L, idx) }
+    unsafe { ffi::lua_absindex(self.L, idx) }
   }
 
   /// Maps to `lua_gettop`.
   pub fn get_top(&mut self) -> Index {
-    unsafe { lua_sys::lua_gettop(self.L) }
+    unsafe { ffi::lua_gettop(self.L) }
   }
 
   /// Maps to `lua_settop`.
   pub fn set_top(&mut self, index: Index) {
-    unsafe { lua_sys::lua_settop(self.L, index) }
+    unsafe { ffi::lua_settop(self.L, index) }
   }
 
   /// Maps to `lua_pushvalue`.
   pub fn push_value(&mut self, index: Index) {
-    unsafe { lua_sys::lua_pushvalue(self.L, index) }
+    unsafe { ffi::lua_pushvalue(self.L, index) }
   }
 
   /// Maps to `lua_rotate`.
   pub fn rotate(&mut self, idx: Index, n: c_int) {
-    unsafe { lua_sys::lua_rotate(self.L, idx, n) }
+    unsafe { ffi::lua_rotate(self.L, idx, n) }
   }
 
   /// Maps to `lua_copy`.
   pub fn copy(&mut self, from_idx: Index, to_idx: Index) {
-    unsafe { lua_sys::lua_copy(self.L, from_idx, to_idx) }
+    unsafe { ffi::lua_copy(self.L, from_idx, to_idx) }
   }
 
   /// Maps to `lua_checkstack`.
   pub fn check_stack(&mut self, extra: c_int) -> bool {
-    let result = unsafe { lua_sys::lua_checkstack(self.L, extra) };
+    let result = unsafe { ffi::lua_checkstack(self.L, extra) };
     result != 0
   }
 
   /// Maps to `lua_xmove`.
   pub fn xmove(&mut self, to: &mut State, n: c_int) {
-    unsafe { lua_sys::lua_xmove(self.L, to.L, n) }
+    unsafe { ffi::lua_xmove(self.L, to.L, n) }
   }
 
   //===========================================================================
@@ -546,39 +546,39 @@ impl State {
   //===========================================================================
   /// Maps to `lua_isnumber`.
   pub fn is_number(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isnumber(self.L, index) == 1 }
+    unsafe { ffi::lua_isnumber(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isstring`.
   pub fn is_string(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isstring(self.L, index) == 1 }
+    unsafe { ffi::lua_isstring(self.L, index) == 1 }
   }
 
   /// Maps to `lua_iscfunction`.
   pub fn is_native_fn(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_iscfunction(self.L, index) == 1 }
+    unsafe { ffi::lua_iscfunction(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isinteger`.
   pub fn is_integer(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isinteger(self.L, index) == 1 }
+    unsafe { ffi::lua_isinteger(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isuserdata`.
   pub fn is_userdata(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isuserdata(self.L, index) == 1 }
+    unsafe { ffi::lua_isuserdata(self.L, index) == 1 }
   }
 
   /// Maps to `lua_type`.
   pub fn type_of(&mut self, index: Index) -> Option<Type> {
-    let result = unsafe { lua_sys::lua_type(self.L, index) };
+    let result = unsafe { ffi::lua_type(self.L, index) };
     Type::from_c_int(result)
   }
 
   /// Maps to `lua_typename`.
   pub fn typename_of(&mut self, tp: Type) -> &'static str {
     unsafe {
-      let ptr = lua_sys::lua_typename(self.L, tp as c_int);
+      let ptr = ffi::lua_typename(self.L, tp as c_int);
       let slice = CStr::from_ptr(ptr).to_bytes();
       str::from_utf8(slice).unwrap()
     }
@@ -587,7 +587,7 @@ impl State {
   /// Maps to `lua_tonumberx`.
   pub fn to_numberx(&mut self, index: Index) -> Option<Number> {
     let mut isnum: c_int = 0;
-    let result = unsafe { lua_sys::lua_tonumberx(self.L, index, &mut isnum) };
+    let result = unsafe { ffi::lua_tonumberx(self.L, index, &mut isnum) };
     if isnum == 0 {
       None
     } else {
@@ -598,7 +598,7 @@ impl State {
   /// Maps to `lua_tointegerx`.
   pub fn to_integerx(&mut self, index: Index) -> Option<Integer> {
     let mut isnum: c_int = 0;
-    let result = unsafe { lua_sys::lua_tointegerx(self.L, index, &mut isnum) };
+    let result = unsafe { ffi::lua_tointegerx(self.L, index, &mut isnum) };
     if isnum == 0 {
       None
     } else {
@@ -608,7 +608,7 @@ impl State {
 
   /// Maps to `lua_toboolean`.
   pub fn to_bool(&mut self, index: Index) -> bool {
-    let result = unsafe { lua_sys::lua_toboolean(self.L, index) };
+    let result = unsafe { ffi::lua_toboolean(self.L, index) };
     result != 0
   }
 
@@ -616,18 +616,18 @@ impl State {
 
   /// Maps to `lua_rawlen`.
   pub fn raw_len(&mut self, index: Index) -> size_t {
-    unsafe { lua_sys::lua_rawlen(self.L, index) }
+    unsafe { ffi::lua_rawlen(self.L, index) }
   }
 
   /// Maps to `lua_tocfunction`.
   pub fn to_native_fn(&mut self, index: Index) -> Function {
-    let result = unsafe { lua_sys::lua_tocfunction(self.L, index) };
+    let result = unsafe { ffi::lua_tocfunction(self.L, index) };
     result
   }
 
   /// Maps to `lua_touserdata`.
   pub fn to_userdata(&mut self, index: Index) -> *mut c_void {
-    unsafe { lua_sys::lua_touserdata(self.L, index) }
+    unsafe { ffi::lua_touserdata(self.L, index) }
   }
 
   /// Convenience function that calls `to_userdata` and performs a cast.
@@ -638,7 +638,7 @@ impl State {
 
   /// Maps to `lua_tothread`.
   pub fn to_thread(&mut self, index: Index) -> Option<State> {
-    let state = unsafe { lua_sys::lua_tothread(self.L, index) };
+    let state = unsafe { ffi::lua_tothread(self.L, index) };
     if state.is_null() {
       None
     } else {
@@ -648,7 +648,7 @@ impl State {
 
   /// Maps to `lua_topointer`.
   pub fn to_pointer(&mut self, index: Index) -> *const c_void {
-    unsafe { lua_sys::lua_topointer(self.L, index) }
+    unsafe { ffi::lua_topointer(self.L, index) }
   }
 
   //===========================================================================
@@ -656,18 +656,18 @@ impl State {
   //===========================================================================
   /// Maps to `lua_arith`.
   pub fn arith(&mut self, op: Arithmetic) {
-    unsafe { lua_sys::lua_arith(self.L, op as c_int) }
+    unsafe { ffi::lua_arith(self.L, op as c_int) }
   }
 
   /// Maps to `lua_rawequal`.
   pub fn raw_equal(&mut self, idx1: Index, idx2: Index) -> bool {
-    let result = unsafe { lua_sys::lua_rawequal(self.L, idx1, idx2) };
+    let result = unsafe { ffi::lua_rawequal(self.L, idx1, idx2) };
     result != 0
   }
 
   /// Maps to `lua_compare`.
   pub fn compare(&mut self, idx1: Index, idx2: Index, op: Comparison) -> bool {
-    let result = unsafe { lua_sys::lua_compare(self.L, idx1, idx2, op as c_int) };
+    let result = unsafe { ffi::lua_compare(self.L, idx1, idx2, op as c_int) };
     result != 0
   }
 
@@ -676,24 +676,24 @@ impl State {
   //===========================================================================
   /// Maps to `lua_pushnil`.
   pub fn push_nil(&mut self) {
-    unsafe { lua_sys::lua_pushnil(self.L) }
+    unsafe { ffi::lua_pushnil(self.L) }
   }
 
   /// Maps to `lua_pushnumber`.
   pub fn push_number(&mut self, n: Number) {
-    unsafe { lua_sys::lua_pushnumber(self.L, n) }
+    unsafe { ffi::lua_pushnumber(self.L, n) }
   }
 
   /// Maps to `lua_pushinteger`.
   pub fn push_integer(&mut self, i: Integer) {
-    unsafe { lua_sys::lua_pushinteger(self.L, i) }
+    unsafe { ffi::lua_pushinteger(self.L, i) }
   }
 
   // omitted: lua_pushstring
 
   /// Maps to `lua_pushlstring`.
   pub fn push_string(&mut self, s: &str) {
-    unsafe { lua_sys::lua_pushlstring(self.L, s.as_ptr() as *const _, s.len() as size_t) };
+    unsafe { ffi::lua_pushlstring(self.L, s.as_ptr() as *const _, s.len() as size_t) };
   }
 
   // omitted: lua_pushvfstring
@@ -701,12 +701,12 @@ impl State {
 
   /// Maps to `lua_pushcclosure`.
   pub fn push_closure(&mut self, f: Function, n: c_int) {
-    unsafe { lua_sys::lua_pushcclosure(self.L, f, n) }
+    unsafe { ffi::lua_pushcclosure(self.L, f, n) }
   }
 
   /// Maps to `lua_pushboolean`.
   pub fn push_bool(&mut self, b: bool) {
-    unsafe { lua_sys::lua_pushboolean(self.L, b as c_int) }
+    unsafe { ffi::lua_pushboolean(self.L, b as c_int) }
   }
 
   /// Maps to `lua_pushlightuserdata`. The Lua state will receive a pointer to
@@ -714,12 +714,12 @@ impl State {
   /// code that manipulates the userdata is free to modify its contents, so
   /// memory safety is not guaranteed.
   pub unsafe fn push_light_userdata<T>(&mut self, ud: *mut T) {
-    lua_sys::lua_pushlightuserdata(self.L, mem::transmute(ud))
+    ffi::lua_pushlightuserdata(self.L, mem::transmute(ud))
   }
 
   /// Maps to `lua_pushthread`.
   pub fn push_thread(&mut self) -> bool {
-    let result = unsafe { lua_sys::lua_pushthread(self.L) };
+    let result = unsafe { ffi::lua_pushthread(self.L) };
     result != 1
   }
 
@@ -730,14 +730,14 @@ impl State {
   pub fn get_global(&mut self, name: &str) -> Type {
     let c_str = CString::new(name).unwrap();
     let ty = unsafe {
-      lua_sys::lua_getglobal(self.L, c_str.as_ptr())
+      ffi::lua_getglobal(self.L, c_str.as_ptr())
     };
     Type::from_c_int(ty).unwrap()
   }
 
   /// Maps to `lua_gettable`.
   pub fn get_table(&mut self, index: Index) -> Type {
-    let ty = unsafe { lua_sys::lua_gettable(self.L, index) };
+    let ty = unsafe { ffi::lua_gettable(self.L, index) };
     Type::from_c_int(ty).unwrap()
   }
 
@@ -745,7 +745,7 @@ impl State {
   pub fn get_field(&mut self, index: Index, k: &str) -> Type {
     let c_str = CString::new(k).unwrap();
     let ty = unsafe {
-      lua_sys::lua_getfield(self.L, index, c_str.as_ptr())
+      ffi::lua_getfield(self.L, index, c_str.as_ptr())
     };
     Type::from_c_int(ty).unwrap()
   }
@@ -753,39 +753,39 @@ impl State {
   /// Maps to `lua_geti`.
   pub fn geti(&mut self, index: Index, i: Integer) -> Type {
     let ty = unsafe {
-      lua_sys::lua_geti(self.L, index, i)
+      ffi::lua_geti(self.L, index, i)
     };
     Type::from_c_int(ty).unwrap()
   }
 
   /// Maps to `lua_rawget`.
   pub fn raw_get(&mut self, index: Index) -> Type {
-    let ty = unsafe { lua_sys::lua_rawget(self.L, index) };
+    let ty = unsafe { ffi::lua_rawget(self.L, index) };
     Type::from_c_int(ty).unwrap()
   }
 
   /// Maps to `lua_rawgeti`.
   pub fn raw_geti(&mut self, index: Index, n: Integer) -> Type {
-    let ty = unsafe { lua_sys::lua_rawgeti(self.L, index, n) };
+    let ty = unsafe { ffi::lua_rawgeti(self.L, index, n) };
     Type::from_c_int(ty).unwrap()
   }
 
   /// Maps to `lua_rawgetp`.
   pub fn raw_getp<T>(&mut self, index: Index, p: *const T) -> Type {
-    let ty = unsafe { lua_sys::lua_rawgetp(self.L, index, mem::transmute(p)) };
+    let ty = unsafe { ffi::lua_rawgetp(self.L, index, mem::transmute(p)) };
     Type::from_c_int(ty).unwrap()
   }
 
   /// Maps to `lua_createtable`.
   pub fn create_table(&mut self, narr: c_int, nrec: c_int) {
-    unsafe { lua_sys::lua_createtable(self.L, narr, nrec) }
+    unsafe { ffi::lua_createtable(self.L, narr, nrec) }
   }
 
   /// Maps to `lua_newuserdata`. The pointer returned is owned by the Lua state
   /// and it will be garbage collected when it is no longer in use or the state
   /// is closed. To specify custom cleanup behavior, use a `__gc` metamethod.
   pub fn new_userdata(&mut self, sz: size_t) -> *mut c_void {
-    unsafe { lua_sys::lua_newuserdata(self.L, sz) }
+    unsafe { ffi::lua_newuserdata(self.L, sz) }
   }
 
   /// Convenience function that uses type information to call `new_userdata`
@@ -804,13 +804,13 @@ impl State {
 
   /// Maps to `lua_getmetatable`.
   pub fn get_metatable(&mut self, objindex: Index) -> bool {
-    let result = unsafe { lua_sys::lua_getmetatable(self.L, objindex) };
+    let result = unsafe { ffi::lua_getmetatable(self.L, objindex) };
     result != 0
   }
 
   /// Maps to `lua_getuservalue`.
   pub fn get_uservalue(&mut self, idx: Index) -> Type {
-    let result = unsafe { lua_sys::lua_getuservalue(self.L, idx) };
+    let result = unsafe { ffi::lua_getuservalue(self.L, idx) };
     Type::from_c_int(result).unwrap()
   }
 
@@ -820,48 +820,48 @@ impl State {
   /// Maps to `lua_setglobal`.
   pub fn set_global(&mut self, var: &str) {
     let c_str = CString::new(var).unwrap();
-    unsafe { lua_sys::lua_setglobal(self.L, c_str.as_ptr()) }
+    unsafe { ffi::lua_setglobal(self.L, c_str.as_ptr()) }
   }
 
   /// Maps to `lua_settable`.
   pub fn set_table(&mut self, idx: Index) {
-    unsafe { lua_sys::lua_settable(self.L, idx) }
+    unsafe { ffi::lua_settable(self.L, idx) }
   }
 
   /// Maps to `lua_setfield`.
   pub fn set_field(&mut self, idx: Index, k: &str) {
     let c_str = CString::new(k).unwrap();
-    unsafe { lua_sys::lua_setfield(self.L, idx, c_str.as_ptr()) }
+    unsafe { ffi::lua_setfield(self.L, idx, c_str.as_ptr()) }
   }
 
   /// Maps to `lua_seti`.
   pub fn seti(&mut self, idx: Index, n: Integer) {
-    unsafe { lua_sys::lua_seti(self.L, idx, n) }
+    unsafe { ffi::lua_seti(self.L, idx, n) }
   }
 
   /// Maps to `lua_rawset`.
   pub fn raw_set(&mut self, idx: Index) {
-    unsafe { lua_sys::lua_rawset(self.L, idx) }
+    unsafe { ffi::lua_rawset(self.L, idx) }
   }
 
   /// Maps to `lua_rawseti`.
   pub fn raw_seti(&mut self, idx: Index, n: Integer) {
-    unsafe { lua_sys::lua_rawseti(self.L, idx, n) }
+    unsafe { ffi::lua_rawseti(self.L, idx, n) }
   }
 
   /// Maps to `lua_rawsetp`.
   pub fn raw_setp<T>(&mut self, idx: Index, p: *const T) {
-    unsafe { lua_sys::lua_rawsetp(self.L, idx, mem::transmute(p)) }
+    unsafe { ffi::lua_rawsetp(self.L, idx, mem::transmute(p)) }
   }
 
   /// Maps to `lua_setmetatable`.
   pub fn set_metatable(&mut self, objindex: Index) {
-    unsafe { lua_sys::lua_setmetatable(self.L, objindex) };
+    unsafe { ffi::lua_setmetatable(self.L, objindex) };
   }
 
   /// Maps to `lua_setuservalue`.
   pub fn set_uservalue(&mut self, idx: Index) {
-    unsafe { lua_sys::lua_setuservalue(self.L, idx) }
+    unsafe { ffi::lua_setuservalue(self.L, idx) }
   }
 
   //===========================================================================
@@ -874,15 +874,15 @@ impl State {
     let func = continue_func::<F>;
     unsafe {
       let ctx = mem::transmute(Box::new(continuation));
-      lua_sys::lua_callk(self.L, nargs, nresults, ctx, Some(continue_func::<F>));
+      ffi::lua_callk(self.L, nargs, nresults, ctx, Some(continue_func::<F>));
       // no yield occurred, so call the continuation
-      func(self.L, lua_sys::LUA_OK, ctx);
+      func(self.L, ffi::LUA_OK, ctx);
     }
   }
 
   /// Maps to `lua_call`.
   pub fn call(&mut self, nargs: c_int, nresults: c_int) {
-    unsafe { lua_sys::lua_call(self.L, nargs, nresults) }
+    unsafe { ffi::lua_call(self.L, nargs, nresults) }
   }
 
   /// Maps to `lua_pcallk`.
@@ -893,14 +893,14 @@ impl State {
     unsafe {
       let ctx = mem::transmute(Box::new(continuation));
       // lua_pcallk only returns if no yield occurs, so call the continuation
-      func(self.L, lua_sys::lua_pcallk(self.L, nargs, nresults, msgh, ctx, Some(func)), ctx)
+      func(self.L, ffi::lua_pcallk(self.L, nargs, nresults, msgh, ctx, Some(func)), ctx)
     }
   }
 
   /// Maps to `lua_pcall`.
   pub fn pcall(&mut self, nargs: c_int, nresults: c_int, msgh: c_int) -> ThreadStatus {
     let result = unsafe {
-      lua_sys::lua_pcall(self.L, nargs, nresults, msgh)
+      ffi::lua_pcall(self.L, nargs, nresults, msgh)
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -921,7 +921,7 @@ impl State {
     let source_c_str = CString::new(source).unwrap();
     let mode_c_str = CString::new(mode).unwrap();
     let result = unsafe {
-      lua_sys::lua_load(self.L, Some(read::<F>), mem::transmute(&mut reader), source_c_str.as_ptr(), mode_c_str.as_ptr())
+      ffi::lua_load(self.L, Some(read::<F>), mem::transmute(&mut reader), source_c_str.as_ptr(), mode_c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -937,7 +937,7 @@ impl State {
     {
       mem::transmute::<_, &mut F>(ud)(&mut State::from_ptr(st), slice::from_raw_parts(p as *const _, sz as usize))
     }
-    unsafe { lua_sys::lua_dump(self.L, Some(write::<F>), mem::transmute(&mut writer), strip as c_int) }
+    unsafe { ffi::lua_dump(self.L, Some(write::<F>), mem::transmute(&mut writer), strip as c_int) }
   }
 
   //===========================================================================
@@ -947,14 +947,14 @@ impl State {
   pub fn co_yieldk<F>(&mut self, nresults: c_int, continuation: F) -> !
     where F: FnOnce(&mut State, ThreadStatus) -> c_int
   {
-    unsafe { lua_sys::lua_yieldk(self.L, nresults, mem::transmute(Box::new(continuation)), Some(continue_func::<F>)) };
+    unsafe { ffi::lua_yieldk(self.L, nresults, mem::transmute(Box::new(continuation)), Some(continue_func::<F>)) };
     panic!("co_yieldk called in non-coroutine context; check is_yieldable first")
   }
 
   /// Maps to `lua_yield`. This function is not called `yield` because it is a
   /// reserved keyword.
   pub fn co_yield(&mut self, nresults: c_int) -> ! {
-    unsafe { lua_sys::lua_yield(self.L, nresults) };
+    unsafe { ffi::lua_yield(self.L, nresults) };
     panic!("co_yield called in non-coroutine context; check is_yieldable first")
   }
 
@@ -965,20 +965,20 @@ impl State {
       None        => ptr::null_mut()
     };
     let result = unsafe {
-      lua_sys::lua_resume(self.L, from_ptr, nargs)
+      ffi::lua_resume(self.L, from_ptr, nargs)
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Maps to `lua_status`.
   pub fn status(&mut self) -> ThreadStatus {
-    let result = unsafe { lua_sys::lua_status(self.L) };
+    let result = unsafe { ffi::lua_status(self.L) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Maps to `lua_isyieldable`.
   pub fn is_yieldable(&mut self) -> bool {
-    let result = unsafe { lua_sys::lua_isyieldable(self.L) };
+    let result = unsafe { ffi::lua_isyieldable(self.L) };
     result != 0
   }
 
@@ -988,7 +988,7 @@ impl State {
   // TODO: return typing?
   /// Maps to `lua_gc`.
   pub fn gc(&mut self, what: GcOption, data: c_int) -> c_int {
-    unsafe { lua_sys::lua_gc(self.L, what as c_int, data) }
+    unsafe { ffi::lua_gc(self.L, what as c_int, data) }
   }
 
   //===========================================================================
@@ -996,41 +996,41 @@ impl State {
   //===========================================================================
   /// Maps to `lua_error`.
   pub fn error(&mut self) -> ! {
-    unsafe { lua_sys::lua_error(self.L) };
+    unsafe { ffi::lua_error(self.L) };
     unreachable!()
   }
 
   /// Maps to `lua_next`.
   pub fn next(&mut self, idx: Index) -> bool {
-    let result = unsafe { lua_sys::lua_next(self.L, idx) };
+    let result = unsafe { ffi::lua_next(self.L, idx) };
     result != 0
   }
 
   /// Maps to `lua_concat`.
   pub fn concat(&mut self, n: c_int) {
-    unsafe { lua_sys::lua_concat(self.L, n) }
+    unsafe { ffi::lua_concat(self.L, n) }
   }
 
   /// Maps to `lua_len`.
   pub fn len(&mut self, idx: Index) {
-    unsafe { lua_sys::lua_len(self.L, idx) }
+    unsafe { ffi::lua_len(self.L, idx) }
   }
 
   /// Maps to `lua_stringtonumber`.
   pub fn string_to_number(&mut self, s: &str) -> size_t {
     let c_str = CString::new(s).unwrap();
-    unsafe { lua_sys::lua_stringtonumber(self.L, c_str.as_ptr()) }
+    unsafe { ffi::lua_stringtonumber(self.L, c_str.as_ptr()) }
   }
 
   /// Maps to `lua_getallocf`.
   pub fn get_alloc_fn(&mut self) -> (Allocator, *mut c_void) {
     let mut slot = ptr::null_mut();
-    (unsafe { lua_sys::lua_getallocf(self.L, &mut slot) }, slot)
+    (unsafe { ffi::lua_getallocf(self.L, &mut slot) }, slot)
   }
 
   /// Maps to `lua_setallocf`.
   pub fn set_alloc_fn(&mut self, f: Allocator, ud: *mut c_void) {
-    unsafe { lua_sys::lua_setallocf(self.L, f, ud) }
+    unsafe { ffi::lua_setallocf(self.L, f, ud) }
   }
 
   //===========================================================================
@@ -1039,14 +1039,14 @@ impl State {
 
   #[inline]
   unsafe fn reset_extra(&mut self) {
-    let space_ptr = lua_sys::lua_getextraspace(self.L) as *mut *mut Extra;
+    let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
     *space_ptr = ptr::null_mut();
   }
 
   /// Set extra data. Return previous value if it was set.
   pub fn set_extra(&mut self, extra: Option<Extra>) -> Option<Extra> {
     unsafe {
-      let space_ptr = lua_sys::lua_getextraspace(self.L) as *mut *mut Extra;
+      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
       let new_value = match extra {
         Some(extra) => Box::into_raw(Box::new(extra)),
         None => ptr::null_mut(),
@@ -1063,7 +1063,7 @@ impl State {
   /// Get the currently set extra data, if any.
   pub fn get_extra(&mut self) -> Option<&mut (any::Any + 'static + Send)> {
     unsafe {
-      let space_ptr = lua_sys::lua_getextraspace(self.L) as *mut *mut Extra;
+      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
       let box_ptr = *space_ptr;
       if box_ptr.is_null() {
         None
@@ -1075,95 +1075,95 @@ impl State {
 
   /// Maps to `lua_tonumber`.
   pub fn to_number(&mut self, index: Index) -> Number {
-    unsafe { lua_sys::lua_tonumber(self.L, index) }
+    unsafe { ffi::lua_tonumber(self.L, index) }
   }
 
   /// Maps to `lua_tointeger`.
   pub fn to_integer(&mut self, index: Index) -> Integer {
-    unsafe { lua_sys::lua_tointeger(self.L, index) }
+    unsafe { ffi::lua_tointeger(self.L, index) }
   }
 
   /// Maps to `lua_pop`.
   pub fn pop(&mut self, n: c_int) {
-    unsafe { lua_sys::lua_pop(self.L, n) }
+    unsafe { ffi::lua_pop(self.L, n) }
   }
 
   /// Maps to `lua_newtable`.
   pub fn new_table(&mut self) {
-    unsafe { lua_sys::lua_newtable(self.L) }
+    unsafe { ffi::lua_newtable(self.L) }
   }
 
   /// Maps to `lua_register`.
   pub fn register(&mut self, n: &str, f: Function) {
     let c_str = CString::new(n).unwrap();
-    unsafe { lua_sys::lua_register(self.L, c_str.as_ptr(), f) }
+    unsafe { ffi::lua_register(self.L, c_str.as_ptr(), f) }
   }
 
   /// Maps to `lua_pushcfunction`.
   pub fn push_fn(&mut self, f: Function) {
-    unsafe { lua_sys::lua_pushcfunction(self.L, f) }
+    unsafe { ffi::lua_pushcfunction(self.L, f) }
   }
 
   /// Maps to `lua_isfunction`.
   pub fn is_fn(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isfunction(self.L, index) == 1 }
+    unsafe { ffi::lua_isfunction(self.L, index) == 1 }
   }
 
   /// Maps to `lua_istable`.
   pub fn is_table(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_istable(self.L, index) == 1 }
+    unsafe { ffi::lua_istable(self.L, index) == 1 }
   }
 
   /// Maps to `lua_islightuserdata`.
   pub fn is_light_userdata(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_islightuserdata(self.L, index) == 1 }
+    unsafe { ffi::lua_islightuserdata(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isnil`.
   pub fn is_nil(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isnil(self.L, index) == 1 }
+    unsafe { ffi::lua_isnil(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isboolean`.
   pub fn is_bool(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isboolean(self.L, index) == 1 }
+    unsafe { ffi::lua_isboolean(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isthread`.
   pub fn is_thread(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isthread(self.L, index) == 1 }
+    unsafe { ffi::lua_isthread(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isnone`.
   pub fn is_none(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isnone(self.L, index) == 1 }
+    unsafe { ffi::lua_isnone(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isnoneornil`.
   pub fn is_none_or_nil(&mut self, index: Index) -> bool {
-    unsafe { lua_sys::lua_isnoneornil(self.L, index) == 1 }
+    unsafe { ffi::lua_isnoneornil(self.L, index) == 1 }
   }
 
   // omitted: lua_pushliteral
 
   /// Maps to `lua_pushglobaltable`.
   pub fn push_global_table(&mut self) {
-    unsafe { lua_sys::lua_pushglobaltable(self.L) };
+    unsafe { ffi::lua_pushglobaltable(self.L) };
   }
 
   /// Maps to `lua_insert`.
   pub fn insert(&mut self, idx: Index) {
-    unsafe { lua_sys::lua_insert(self.L, idx) }
+    unsafe { ffi::lua_insert(self.L, idx) }
   }
 
   /// Maps to `lua_remove`.
   pub fn remove(&mut self, idx: Index) {
-    unsafe { lua_sys::lua_remove(self.L, idx) }
+    unsafe { ffi::lua_remove(self.L, idx) }
   }
 
   /// Maps to `lua_replace`.
   pub fn replace(&mut self, idx: Index) {
-    unsafe { lua_sys::lua_replace(self.L, idx) }
+    unsafe { ffi::lua_replace(self.L, idx) }
   }
 
   //===========================================================================
@@ -1172,7 +1172,7 @@ impl State {
   /// Maps to `lua_getstack`.
   pub fn get_stack(&mut self, level: c_int) -> Option<lua_Debug> {
     let mut ar: lua_Debug = unsafe { mem::uninitialized() };
-    let result = unsafe { lua_sys::lua_getstack(self.L, level, &mut ar) };
+    let result = unsafe { ffi::lua_getstack(self.L, level, &mut ar) };
     if result == 0 {
       None
     } else {
@@ -1184,7 +1184,7 @@ impl State {
   pub fn get_info(&mut self, what: &str) -> Option<lua_Debug> {
     let mut ar: lua_Debug = unsafe { mem::uninitialized() };
     let c_str = CString::new(what).unwrap();
-    let result = unsafe { lua_sys::lua_getinfo(self.L, c_str.as_ptr(), &mut ar) };
+    let result = unsafe { ffi::lua_getinfo(self.L, c_str.as_ptr(), &mut ar) };
     if result == 0 {
       None
     } else {
@@ -1194,7 +1194,7 @@ impl State {
 
   /// Maps to `lua_getlocal`.
   pub fn get_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<&str> {
-    let ptr = unsafe { lua_sys::lua_getlocal(self.L, ar, n) };
+    let ptr = unsafe { ffi::lua_getlocal(self.L, ar, n) };
     if ptr.is_null() {
       None
     } else {
@@ -1205,7 +1205,7 @@ impl State {
 
   /// Maps to `lua_setlocal`.
   pub fn set_local(&mut self, ar: &lua_Debug, n: c_int) -> Option<&str> {
-    let ptr = unsafe { lua_sys::lua_setlocal(self.L, ar, n) };
+    let ptr = unsafe { ffi::lua_setlocal(self.L, ar, n) };
     if ptr.is_null() {
       None
     } else {
@@ -1216,7 +1216,7 @@ impl State {
 
   /// Maps to `lua_getupvalue`.
   pub fn get_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<&str> {
-    let ptr = unsafe { lua_sys::lua_getupvalue(self.L, funcindex, n) };
+    let ptr = unsafe { ffi::lua_getupvalue(self.L, funcindex, n) };
     if ptr.is_null() {
       None
     } else {
@@ -1227,7 +1227,7 @@ impl State {
 
   /// Maps to `lua_setupvalue`.
   pub fn set_upvalue(&mut self, funcindex: Index, n: c_int) -> Option<&str> {
-    let ptr = unsafe { lua_sys::lua_setupvalue(self.L, funcindex, n) };
+    let ptr = unsafe { ffi::lua_setupvalue(self.L, funcindex, n) };
     if ptr.is_null() {
       None
     } else {
@@ -1238,33 +1238,33 @@ impl State {
 
   /// Maps to `lua_upvalueid`.
   pub fn upvalue_id(&mut self, funcindex: Index, n: c_int) -> *mut c_void {
-    unsafe { lua_sys::lua_upvalueid(self.L, funcindex, n) }
+    unsafe { ffi::lua_upvalueid(self.L, funcindex, n) }
   }
 
   /// Maps to `lua_upvaluejoin`.
   pub fn upvalue_join(&mut self, fidx1: Index, n1: c_int, fidx2: Index, n2: c_int) {
-    unsafe { lua_sys::lua_upvaluejoin(self.L, fidx1, n1, fidx2, n2) }
+    unsafe { ffi::lua_upvaluejoin(self.L, fidx1, n1, fidx2, n2) }
   }
 
   /// Maps to `lua_sethook`.
   pub fn set_hook(&mut self, func: Hook, mask: HookMask, count: c_int) {
-    unsafe { lua_sys::lua_sethook(self.L, func, mask.bits(), count) }
+    unsafe { ffi::lua_sethook(self.L, func, mask.bits(), count) }
   }
 
   /// Maps to `lua_gethook`.
   pub fn get_hook(&mut self) -> Hook {
-    unsafe { lua_sys::lua_gethook(self.L) }
+    unsafe { ffi::lua_gethook(self.L) }
   }
 
   /// Maps to `lua_gethookmask`.
   pub fn get_hook_mask(&mut self) -> HookMask {
-    let result = unsafe { lua_sys::lua_gethookmask(self.L) };
+    let result = unsafe { ffi::lua_gethookmask(self.L) };
     HookMask::from_bits_truncate(result)
   }
 
   /// Maps to `lua_gethookcount`.
   pub fn get_hook_count(&mut self) -> c_int {
-    unsafe { lua_sys::lua_gethookcount(self.L) }
+    unsafe { ffi::lua_gethookcount(self.L) }
   }
 
   //===========================================================================
@@ -1272,14 +1272,14 @@ impl State {
   //===========================================================================
   /// Maps to `luaL_checkversion`.
   pub fn check_version(&mut self) {
-    unsafe { lua_sys::luaL_checkversion(self.L) }
+    unsafe { ffi::luaL_checkversion(self.L) }
   }
 
   /// Maps to `luaL_getmetafield`.
   pub fn get_metafield(&mut self, obj: Index, e: &str) -> bool {
     let c_str = CString::new(e).unwrap();
     let result = unsafe {
-      lua_sys::luaL_getmetafield(self.L, obj, c_str.as_ptr())
+      ffi::luaL_getmetafield(self.L, obj, c_str.as_ptr())
     };
     result != 0
   }
@@ -1288,7 +1288,7 @@ impl State {
   pub fn call_meta(&mut self, obj: Index, e: &str) -> bool {
     let c_str = CString::new(e).unwrap();
     let result = unsafe {
-      lua_sys::luaL_callmeta(self.L, obj, c_str.as_ptr())
+      ffi::luaL_callmeta(self.L, obj, c_str.as_ptr())
     };
     result != 0
   }
@@ -1299,7 +1299,7 @@ impl State {
   /// called.
   pub fn to_str(&mut self, index: Index) -> Option<&str> {
     let mut len = 0;
-    let ptr = unsafe { lua_sys::luaL_tolstring(self.L, index, &mut len) };
+    let ptr = unsafe { ffi::luaL_tolstring(self.L, index, &mut len) };
     if ptr.is_null() {
       None
     } else {
@@ -1314,7 +1314,7 @@ impl State {
   /// called.
   pub fn to_str_in_place(&mut self, index: Index) -> Option<&str> {
     let mut len = 0;
-    let ptr = unsafe { lua_sys::lua_tolstring(self.L, index, &mut len) };
+    let ptr = unsafe { ffi::lua_tolstring(self.L, index, &mut len) };
     if ptr.is_null() {
       None
     } else {
@@ -1327,7 +1327,7 @@ impl State {
   pub fn arg_error(&mut self, arg: Index, extramsg: &str) -> ! {
     // nb: leaks the CString
     let c_str = CString::new(extramsg).unwrap();
-    unsafe { lua_sys::luaL_argerror(self.L, arg, c_str.as_ptr()) };
+    unsafe { ffi::luaL_argerror(self.L, arg, c_str.as_ptr()) };
     unreachable!()
   }
 
@@ -1336,45 +1336,45 @@ impl State {
 
   /// Maps to `luaL_checknumber`.
   pub fn check_number(&mut self, arg: Index) -> Number {
-    unsafe { lua_sys::luaL_checknumber(self.L, arg) }
+    unsafe { ffi::luaL_checknumber(self.L, arg) }
   }
 
   /// Maps to `luaL_optnumber`.
   pub fn opt_number(&mut self, arg: Index, def: Number) -> Number {
-    unsafe { lua_sys::luaL_optnumber(self.L, arg, def) }
+    unsafe { ffi::luaL_optnumber(self.L, arg, def) }
   }
 
   /// Maps to `luaL_checkinteger`.
   pub fn check_integer(&mut self, arg: Index) -> Integer {
-    unsafe { lua_sys::luaL_checkinteger(self.L, arg) }
+    unsafe { ffi::luaL_checkinteger(self.L, arg) }
   }
 
   /// Maps to `luaL_optinteger`.
   pub fn opt_integer(&mut self, arg: Index, def: Integer) -> Integer {
-    unsafe { lua_sys::luaL_optinteger(self.L, arg, def) }
+    unsafe { ffi::luaL_optinteger(self.L, arg, def) }
   }
 
   /// Maps to `luaL_checkstack`.
   pub fn check_stack_msg(&mut self, sz: c_int, msg: &str) {
     let c_str = CString::new(msg).unwrap();
-    unsafe { lua_sys::luaL_checkstack(self.L, sz, c_str.as_ptr()) }
+    unsafe { ffi::luaL_checkstack(self.L, sz, c_str.as_ptr()) }
   }
 
   /// Maps to `luaL_checktype`.
   pub fn check_type(&mut self, arg: Index, t: Type) {
-    unsafe { lua_sys::luaL_checktype(self.L, arg, t as c_int) }
+    unsafe { ffi::luaL_checktype(self.L, arg, t as c_int) }
   }
 
   /// Maps to `luaL_checkany`.
   pub fn check_any(&mut self, arg: Index) {
-    unsafe { lua_sys::luaL_checkany(self.L, arg) }
+    unsafe { ffi::luaL_checkany(self.L, arg) }
   }
 
   /// Maps to `luaL_newmetatable`.
   pub fn new_metatable(&mut self, tname: &str) -> bool {
     let c_str = CString::new(tname).unwrap();
     let result = unsafe {
-      lua_sys::luaL_newmetatable(self.L, c_str.as_ptr())
+      ffi::luaL_newmetatable(self.L, c_str.as_ptr())
     };
     result != 0
   }
@@ -1382,13 +1382,13 @@ impl State {
   /// Maps to `luaL_setmetatable`.
   pub fn set_metatable_from_registry(&mut self, tname: &str) {
     let c_str = CString::new(tname).unwrap();
-    unsafe { lua_sys::luaL_setmetatable(self.L, c_str.as_ptr()) }
+    unsafe { ffi::luaL_setmetatable(self.L, c_str.as_ptr()) }
   }
 
   /// Maps to `luaL_testudata`.
   pub fn test_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
     let c_str = CString::new(tname).unwrap();
-    unsafe { lua_sys::luaL_testudata(self.L, arg, c_str.as_ptr()) }
+    unsafe { ffi::luaL_testudata(self.L, arg, c_str.as_ptr()) }
   }
 
   /// Convenience function that calls `test_userdata` and performs a cast.
@@ -1400,7 +1400,7 @@ impl State {
   /// Maps to `luaL_checkudata`.
   pub fn check_userdata(&mut self, arg: Index, tname: &str) -> *mut c_void {
     let c_str = CString::new(tname).unwrap();
-    unsafe { lua_sys::luaL_checkudata(self.L, arg, c_str.as_ptr()) }
+    unsafe { ffi::luaL_checkudata(self.L, arg, c_str.as_ptr()) }
   }
 
   /// Convenience function that calls `check_userdata` and performs a cast.
@@ -1411,7 +1411,7 @@ impl State {
 
   /// Maps to `luaL_where`. `where` is a reserved keyword.
   pub fn location(&mut self, lvl: c_int) {
-    unsafe { lua_sys::luaL_where(self.L, lvl) }
+    unsafe { ffi::luaL_where(self.L, lvl) }
   }
 
   // omitted: luaL_error
@@ -1429,10 +1429,10 @@ impl State {
     let result = match def {
       Some(def) => unsafe {
         let c_str = CString::new(def).unwrap();
-        lua_sys::luaL_checkoption(self.L, arg, c_str.as_ptr(), vec.as_ptr())
+        ffi::luaL_checkoption(self.L, arg, c_str.as_ptr(), vec.as_ptr())
       },
       None      => unsafe {
-        lua_sys::luaL_checkoption(self.L, arg, ptr::null(), vec.as_ptr())
+        ffi::luaL_checkoption(self.L, arg, ptr::null(), vec.as_ptr())
       }
     };
     result as usize
@@ -1441,23 +1441,23 @@ impl State {
   /// Maps to `luaL_fileresult`.
   pub fn file_result(&mut self, stat: c_int, fname: &str) -> c_int {
     let c_str = CString::new(fname).unwrap();
-    unsafe { lua_sys::luaL_fileresult(self.L, stat, c_str.as_ptr()) }
+    unsafe { ffi::luaL_fileresult(self.L, stat, c_str.as_ptr()) }
   }
 
   /// Maps to `luaL_execresult`.
   pub fn exec_result(&mut self, stat: c_int) -> c_int {
-    unsafe { lua_sys::luaL_execresult(self.L, stat) }
+    unsafe { ffi::luaL_execresult(self.L, stat) }
   }
 
   /// Maps to `luaL_ref`.
   pub fn reference(&mut self, t: Index) -> Reference {
-    let result = unsafe { lua_sys::luaL_ref(self.L, t) };
+    let result = unsafe { ffi::luaL_ref(self.L, t) };
     Reference(result)
   }
 
   /// Maps to `luaL_unref`.
   pub fn unreference(&mut self, t: Index, reference: Reference) {
-    unsafe { lua_sys::luaL_unref(self.L, t, reference.value()) }
+    unsafe { ffi::luaL_unref(self.L, t, reference.value()) }
   }
 
   /// Maps to `luaL_loadfilex`.
@@ -1465,7 +1465,7 @@ impl State {
     let result = unsafe {
       let filename_c_str = CString::new(filename).unwrap();
       let mode_c_str = CString::new(mode).unwrap();
-      lua_sys::luaL_loadfilex(self.L, filename_c_str.as_ptr(), mode_c_str.as_ptr())
+      ffi::luaL_loadfilex(self.L, filename_c_str.as_ptr(), mode_c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -1474,7 +1474,7 @@ impl State {
   pub fn load_file(&mut self, filename: &str) -> ThreadStatus {
     let c_str = CString::new(filename).unwrap();
     let result = unsafe {
-      lua_sys::luaL_loadfile(self.L, c_str.as_ptr())
+      ffi::luaL_loadfile(self.L, c_str.as_ptr())
     };
     ThreadStatus::from_c_int(result).unwrap()
   }
@@ -1483,14 +1483,14 @@ impl State {
   pub fn load_bufferx(&mut self, buff: &[u8], name: &str, mode: &str) -> ThreadStatus {
     let name_c_str = CString::new(name).unwrap();
     let mode_c_str = CString::new(mode).unwrap();
-    let result = unsafe { lua_sys::luaL_loadbufferx(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr(), mode_c_str.as_ptr()) };
+    let result = unsafe { ffi::luaL_loadbufferx(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr(), mode_c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
   /// Maps to `luaL_loadstring`.
   pub fn load_string(&mut self, source: &str) -> ThreadStatus {
     let c_str = CString::new(source).unwrap();
-    let result = unsafe { lua_sys::luaL_loadstring(self.L, c_str.as_ptr()) };
+    let result = unsafe { ffi::luaL_loadstring(self.L, c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
@@ -1498,7 +1498,7 @@ impl State {
 
   /// Maps to `luaL_len`.
   pub fn len_direct(&mut self, index: Index) -> Integer {
-    unsafe { lua_sys::luaL_len(self.L, index) }
+    unsafe { ffi::luaL_len(self.L, index) }
   }
 
   /// Maps to `luaL_gsub`.
@@ -1507,7 +1507,7 @@ impl State {
     let p_c_str = CString::new(p).unwrap();
     let r_c_str = CString::new(r).unwrap();
     let ptr = unsafe {
-      lua_sys::luaL_gsub(self.L, s_c_str.as_ptr(), p_c_str.as_ptr(), r_c_str.as_ptr())
+      ffi::luaL_gsub(self.L, s_c_str.as_ptr(), p_c_str.as_ptr(), r_c_str.as_ptr())
     };
     let slice = unsafe { CStr::from_ptr(ptr).to_bytes() };
     str::from_utf8(slice).unwrap()
@@ -1516,23 +1516,23 @@ impl State {
   /// Maps to `luaL_setfuncs`.
   pub fn set_fns(&mut self, l: &[(&str, Function)], nup: c_int) {
     use std::vec::Vec;
-    let mut reg: Vec<lua_sys::luaL_Reg> = Vec::with_capacity(l.len() + 1);
+    let mut reg: Vec<ffi::luaL_Reg> = Vec::with_capacity(l.len() + 1);
     let ents: Vec<(CString, Function)> = l.iter().map(|&(s, f)| (CString::new(s).unwrap(), f)).collect();
     for &(ref s, f) in ents.iter() {
-      reg.push(lua_sys::luaL_Reg {
+      reg.push(ffi::luaL_Reg {
         name: s.as_ptr(),
         func: f
       });
     }
-    reg.push(lua_sys::luaL_Reg {name: ptr::null(), func: None});
-    unsafe { lua_sys::luaL_setfuncs(self.L, reg.as_ptr(), nup) }
+    reg.push(ffi::luaL_Reg {name: ptr::null(), func: None});
+    unsafe { ffi::luaL_setfuncs(self.L, reg.as_ptr(), nup) }
   }
 
   /// Maps to `luaL_getsubtable`.
   pub fn get_subtable(&mut self, idx: Index, fname: &str) -> bool {
     let c_str = CString::new(fname).unwrap();
     let result = unsafe {
-      lua_sys::luaL_getsubtable(self.L, idx, c_str.as_ptr())
+      ffi::luaL_getsubtable(self.L, idx, c_str.as_ptr())
     };
     result != 0
   }
@@ -1540,13 +1540,13 @@ impl State {
   /// Maps to `luaL_traceback`.
   pub fn traceback(&mut self, state: &mut State, msg: &str, level: c_int) {
     let c_str = CString::new(msg).unwrap();
-    unsafe { lua_sys::luaL_traceback(self.L, state.L, c_str.as_ptr(), level) }
+    unsafe { ffi::luaL_traceback(self.L, state.L, c_str.as_ptr(), level) }
   }
 
   /// Maps to `luaL_requiref`.
   pub fn requiref(&mut self, modname: &str, openf: Function, glb: bool) {
     let c_str = CString::new(modname).unwrap();
-    unsafe { lua_sys::luaL_requiref(self.L, c_str.as_ptr(), openf, glb as c_int) }
+    unsafe { ffi::luaL_requiref(self.L, c_str.as_ptr(), openf, glb as c_int) }
   }
 
   /// Maps to `luaL_newlibtable`.
@@ -1565,14 +1565,14 @@ impl State {
   pub fn arg_check(&mut self, cond: bool, arg: Index, extramsg: &str) {
     let c_str = CString::new(extramsg).unwrap();
     unsafe {
-      lua_sys::luaL_argcheck(self.L, cond as c_int, arg, c_str.as_ptr())
+      ffi::luaL_argcheck(self.L, cond as c_int, arg, c_str.as_ptr())
     }
   }
 
   /// Maps to `luaL_checklstring`.
   pub fn check_string(&mut self, n: Index) -> &str {
     let mut size = 0;
-    let ptr = unsafe { lua_sys::luaL_checklstring(self.L, n, &mut size) };
+    let ptr = unsafe { ffi::luaL_checklstring(self.L, n, &mut size) };
     let slice = unsafe { slice::from_raw_parts(ptr as *const u8, size as usize) };
     str::from_utf8(slice).unwrap()
   }
@@ -1581,7 +1581,7 @@ impl State {
   pub fn opt_string<'a>(&'a mut self, n: Index, default: &'a str) -> &'a str {
     let mut size = 0;
     let c_str = CString::new(default).unwrap();
-    let ptr = unsafe { lua_sys::luaL_optlstring(self.L, n, c_str.as_ptr(), &mut size) };
+    let ptr = unsafe { ffi::luaL_optlstring(self.L, n, c_str.as_ptr(), &mut size) };
     if ptr == c_str.as_ptr() {
       default
     } else {
@@ -1606,7 +1606,7 @@ impl State {
   /// Maps to `luaL_getmetatable`.
   pub fn get_metatable_from_registry(&mut self, tname: &str) {
     let c_str = CString::new(tname).unwrap();
-    unsafe { lua_sys::luaL_getmetatable(self.L, c_str.as_ptr()) }
+    unsafe { ffi::luaL_getmetatable(self.L, c_str.as_ptr()) }
   }
 
   // omitted: luaL_opt (undocumented function)
@@ -1614,7 +1614,7 @@ impl State {
   /// Maps to `luaL_loadbuffer`.
   pub fn load_buffer(&mut self, buff: &[u8], name: &str) -> ThreadStatus {
     let name_c_str = CString::new(name).unwrap();
-    let result = unsafe { lua_sys::luaL_loadbuffer(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr()) };
+    let result = unsafe { ffi::luaL_loadbuffer(self.L, buff.as_ptr() as *const _, buff.len() as size_t, name_c_str.as_ptr()) };
     ThreadStatus::from_c_int(result).unwrap()
   }
 
@@ -1625,7 +1625,7 @@ impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
       let _ = self.set_extra(None);
-      unsafe { lua_sys::lua_close(self.L) }
+      unsafe { ffi::lua_close(self.L) }
     }
   }
 }

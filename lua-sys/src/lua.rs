@@ -22,10 +22,10 @@
 
 //! Contains definitions from `lua.h`.
 
-#[cfg(feature = "no_std")]
-use core::ptr;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "use_std")]
 use std::ptr;
+#[cfg(not(feature = "use_std"))]
+use core::ptr;
 use libc::{c_void, c_int, c_char, c_uchar, size_t};
 use luaconf;
 
@@ -353,22 +353,9 @@ pub unsafe fn lua_isnoneornil(L: *mut lua_State, n: c_int) -> c_int {
 }
 
 // TODO: Test
-#[cfg(not(feature = "no_std"))]
 #[inline(always)]
-pub unsafe fn lua_pushliteral(L: *mut lua_State, s: &'static str) -> *const c_char {
-  use std::ffi::CString;
-
-  let c_str = CString::new(s).unwrap();
-  lua_pushlstring(L, c_str.as_ptr(), c_str.as_bytes().len() as size_t)
-}
-
-#[cfg(feature = "no_std")]
-#[inline(always)]
-pub unsafe fn lua_pushliteral(L: *mut lua_State, s: &'static str) -> *const c_char {
-  use rcstring::CString;
-
-  let c_str = CString::new(s).unwrap();
-  lua_pushlstring(L, c_str.into_raw(), c_str.len() as size_t)
+pub unsafe fn lua_pushliteral(L: *mut lua_State, s: &[u8]) -> *const c_char {
+  lua_pushlstring(L, s.as_ptr() as *const c_char, s.len() as size_t)
 }
 
 #[inline(always)]

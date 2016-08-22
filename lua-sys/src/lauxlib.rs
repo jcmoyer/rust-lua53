@@ -26,10 +26,10 @@ use libc::{c_int, c_long, c_char, c_void, size_t};
 use lua;
 use lua::{lua_State, lua_CFunction, lua_Integer, lua_Number};
 use luaconf::LUAL_BUFFERSIZE;
-#[cfg(feature = "no_std")]
-use core::ptr;
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "use_std")]
 use std::ptr;
+#[cfg(not(feature = "use_std"))]
+use core::ptr;
 
 pub use glue::LUAL_NUMSIZES;
 pub use glue::LUA_FILEHANDLE;

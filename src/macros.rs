@@ -1,8 +1,9 @@
 use std::mem;
 
-use wrapper::state::State;
-use lua_sys::{lua_State, lua_CFunction};
-use lua_sys::libc::c_int;
+use State;
+use ffi::{lua_State, lua_CFunction};
+use ffi::libc::c_int;
+
 
 /// Wrap a `fn(&mut State) -> u32` as an ffi-suitable `Function`. The argument
 /// must be a path, so that the specific `fn` is known at compile-time.
