@@ -794,8 +794,8 @@ impl State {
   /// # Example
   ///
   /// ```ignore
-  /// *state.new_userdata_typed() = MyStruct::new(...);
-  /// state.set_metatable_from_registry(-1, "MyStruct");
+  /// unsafe { *state.new_userdata_typed() = MyStruct::new(...); }
+  /// state.set_metatable_from_registry("MyStruct");
   /// ```
   //#[unstable(reason="this is an experimental function")]
   pub fn new_userdata_typed<T>(&mut self) -> *mut T {
