@@ -26,6 +26,7 @@ use ffi::{lua_State, lua_Debug};
 use libc::{c_int, c_void, c_char, size_t};
 use std::{mem, ptr, str, slice, any};
 use std::ffi::{CString, CStr};
+use std::sync::{Arc, Weak};
 use super::convert::{ToLua, FromLua};
 
 use ::{
@@ -313,6 +314,25 @@ unsafe extern fn alloc_func(_: *mut c_void, ptr: *mut c_void, old_size: size_t, 
   }
 }
 
+/// Origin of `lua_State` reference.
+enum Origin {
+  Owned {
+    extra: Option<Arc<Extra>>,
+  },
+  Thread,
+  Restored,
+}
+
+impl Origin {
+  fn is_owned(&self) -> bool {
+    if let Origin::Owned { .. } = *self {
+      true
+    } else {
+      false
+    }
+  }
+}
+
 /// An idiomatic, Rust wrapper around `lua_State`.
 ///
 /// Function names adhere to Rust naming conventions. Most of the time, this
@@ -328,7 +348,7 @@ unsafe extern fn alloc_func(_: *mut c_void, ptr: *mut c_void, old_size: size_t, 
 #[allow(non_snake_case)]
 pub struct State {
   L: *mut lua_State,
-  owned: bool
+  origin: Origin,
 }
 
 unsafe impl Send for State {}
@@ -339,7 +359,8 @@ impl State {
   pub fn new() -> State {
     unsafe {
       let state = ffi::lua_newstate(Some(alloc_func), ptr::null_mut());
-      let mut state = State { L: state, owned: true };
+      let origin = Origin::Owned { extra: None };
+      let mut state = State { L: state, origin: origin };
       state.reset_extra();
       state
     }
@@ -349,7 +370,7 @@ impl State {
   /// inside of native functions that accept a `lua_State` to obtain a wrapper.
   #[allow(non_snake_case)]
   pub unsafe fn from_ptr(L: *mut lua_State) -> State {
-    State { L: L, owned: false }
+    State { L: L, origin: Origin::Restored }
   }
 
   /// Returns an unsafe pointer to the wrapped `lua_State`.
@@ -469,7 +490,7 @@ impl State {
   /// Maps to `lua_close`.
   pub fn close(self) {
     // lua_close will be called in the Drop impl
-    if !self.owned {
+    if !self.origin.is_owned() {
       panic!("cannot explicitly close non-owned Lua state")
     }
   }
@@ -477,9 +498,12 @@ impl State {
   /// Maps to `lua_newthread`.
   pub fn new_thread(&mut self) -> State {
     unsafe {
-      let mut state = State::from_ptr(ffi::lua_newthread(self.L));
-      state.reset_extra();
-      state
+      let thread = ffi::lua_newthread(self.L);
+      let mut thread = State { L: thread, origin: Origin::Thread };
+      thread.reset_extra();
+      let cloned_extra = self.get_extra();
+      thread.set_extra(cloned_extra);
+      thread
     }
   }
 
@@ -1039,37 +1063,30 @@ impl State {
 
   #[inline]
   unsafe fn reset_extra(&mut self) {
-    let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-    *space_ptr = ptr::null_mut();
+    let extra_ptr = ffi::lua_getextraspace(self.L) as *mut Option<Weak<Extra>>;
+    ptr::write(extra_ptr, None);
   }
 
   /// Set extra data. Return previous value if it was set.
-  pub fn set_extra(&mut self, extra: Option<Extra>) -> Option<Extra> {
-    unsafe {
-      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      let new_value = match extra {
-        Some(extra) => Box::into_raw(Box::new(extra)),
-        None => ptr::null_mut(),
-      };
-      let old_value = ptr::replace(space_ptr, new_value);
-      if old_value.is_null() {
-        None
-      } else {
-        Some(*Box::from_raw(old_value))
-      }
+  pub fn set_extra(&mut self, new_extra: Option<Arc<Extra>>) -> Option<Arc<Extra>> {
+    let new_value = new_extra.as_ref().map(Arc::downgrade);
+    let prev = unsafe {
+      let extra_ptr = ffi::lua_getextraspace(self.L) as *mut Option<Weak<Extra>>;
+      let old_value = ptr::replace(extra_ptr, new_value);
+      old_value.as_ref().and_then(Weak::upgrade)
+    };
+    // Drop `Arc` last in order, to keep reference to previous alive
+    if let Origin::Owned { ref mut extra } = self.origin {
+      *extra = new_extra;
     }
+    prev
   }
 
   /// Get the currently set extra data, if any.
-  pub fn get_extra(&mut self) -> Option<&mut (any::Any + 'static + Send)> {
+  pub fn get_extra(&mut self) -> Option<Arc<Extra>> {
     unsafe {
-      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      let box_ptr = *space_ptr;
-      if box_ptr.is_null() {
-        None
-      } else {
-        Some(&mut **box_ptr)
-      }
+      let extra_ptr = ffi::lua_getextraspace(self.L) as *const Option<Weak<Extra>>;
+      (*extra_ptr).as_ref().and_then(Weak::upgrade)
     }
   }
 
@@ -1623,8 +1640,7 @@ impl State {
 
 impl Drop for State {
   fn drop(&mut self) {
-    if self.owned {
-      let _ = self.set_extra(None);
+    if self.origin.is_owned() {
       unsafe { ffi::lua_close(self.L) }
     }
   }

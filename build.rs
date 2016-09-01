@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::ffi::OsString;
 
+type WeakRef = Option<std::sync::Weak<Box<std::any::Any + Send + 'static>>>;
+
 trait CommandExt {
     fn execute(&mut self) -> io::Result<()>;
 }
@@ -85,6 +87,14 @@ fn prebuild() -> io::Result<()> {
     };
     let build_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let mut config = gcc::Config::new();
+
+    // This library uses LUA_EXTRASPACE to store weak references.
+    // Lua uses pointer's size as default extra space's size
+    // Check that we can store weak reference fully into extra space
+    // to don't override Lua's defaults or patch `luaconf.h`.
+    let weak_size = std::mem::size_of::<WeakRef>();
+    let ptr_size = std::mem::size_of::<*mut WeakRef>();
+    assert_eq!(weak_size, ptr_size);
 
     println!("cargo:rustc-link-lib=static=lua");
     if lua_dir.join("liblua.a").exists() {
