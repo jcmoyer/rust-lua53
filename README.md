@@ -1,4 +1,4 @@
-# rust-lua53 [![Build Status](https://travis-ci.org/jcmoyer/rust-lua53.svg?branch=master)](https://travis-ci.org/jcmoyer/rust-lua53)
+# rust-lua53 [![Build Status](https://travis-ci.org/jcmoyer/rust-lua53.svg?branch=master)](https://travis-ci.org/jcmoyer/rust-lua53) [![Documentation](https://docs.rs/lua/badge.svg)](https://docs.rs/lua)
 Aims to be complete Rust bindings for Lua 5.3 and beyond. Currently, `master`
 is tracking Lua `5.3.3`.
 
