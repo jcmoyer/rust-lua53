@@ -207,7 +207,7 @@ impl Library {
 }
 
 /// Type of Lua references generated through `reference` and `unreference`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Reference(c_int);
 
 /// The result of `reference` for `nil` values.
