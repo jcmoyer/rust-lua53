@@ -32,6 +32,7 @@ extern crate bitflags;
 
 pub use wrapper::state::{
   State,
+  Extra,
 
   Arithmetic,
   Comparison,

@@ -26,6 +26,8 @@ use ffi::{lua_State, lua_Debug};
 use libc::{c_int, c_void, c_char, size_t};
 use std::{mem, ptr, str, slice, any};
 use std::ffi::{CString, CStr};
+use std::ops::DerefMut;
+use std::sync::Mutex;
 use super::convert::{ToLua, FromLua};
 
 use ::{
@@ -269,6 +271,7 @@ unsafe extern fn continue_func<F>(st: *mut lua_State, status: c_int, ctx: ffi::l
 
 /// Box for extra data.
 pub type Extra = Box<any::Any + 'static + Send>;
+type ExtraHolder = *mut *mut Mutex<Option<Extra>>;
 
 unsafe extern fn alloc_func(_: *mut c_void, ptr: *mut c_void, old_size: size_t, new_size: size_t) -> *mut c_void {
   // In GCC and MSVC, malloc uses an alignment calculated roughly by:
@@ -340,9 +343,10 @@ impl State {
   pub fn new() -> State {
     unsafe {
       let state = ffi::lua_newstate(Some(alloc_func), ptr::null_mut());
-      let mut state = State { L: state, owned: true };
-      state.reset_extra();
-      state
+      let extra_ptr = ffi::lua_getextraspace(state) as ExtraHolder;
+      let mutex = Box::new(Mutex::new(None));
+      *extra_ptr = Box::into_raw(mutex);
+      State { L: state, owned: true }
     }
   }
 
@@ -478,9 +482,7 @@ impl State {
   /// Maps to `lua_newthread`.
   pub fn new_thread(&mut self) -> State {
     unsafe {
-      let mut state = State::from_ptr(ffi::lua_newthread(self.L));
-      state.reset_extra();
-      state
+      State::from_ptr(ffi::lua_newthread(self.L))
     }
   }
 
@@ -1038,40 +1040,39 @@ impl State {
   // Some useful macros (here implemented as functions)
   //===========================================================================
 
-  #[inline]
-  unsafe fn reset_extra(&mut self) {
-    let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-    *space_ptr = ptr::null_mut();
-  }
-
   /// Set extra data. Return previous value if it was set.
   pub fn set_extra(&mut self, extra: Option<Extra>) -> Option<Extra> {
+    self.with_extra(|opt_extra| mem::replace(opt_extra, extra))
+  }
+
+  /// Do some actions with mutable extra.
+  pub fn with_extra<F, R>(&mut self, closure: F) -> R
+    where F: FnOnce(&mut Option<Extra>) -> R {
     unsafe {
-      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      let new_value = match extra {
-        Some(extra) => Box::into_raw(Box::new(extra)),
-        None => ptr::null_mut(),
+      let extra_ptr = ffi::lua_getextraspace(self.L) as ExtraHolder;
+      let mutex = Box::from_raw(*extra_ptr);
+      let result = {
+        let mut guard = mutex.lock().unwrap();
+        closure(guard.deref_mut())
       };
-      let old_value = ptr::replace(space_ptr, new_value);
-      if old_value.is_null() {
-        None
-      } else {
-        Some(*Box::from_raw(old_value))
-      }
+      mem::forget(mutex);
+      result
     }
   }
 
-  /// Get the currently set extra data, if any.
-  pub fn get_extra(&mut self) -> Option<&mut (any::Any + 'static + Send)> {
-    unsafe {
-      let space_ptr = ffi::lua_getextraspace(self.L) as *mut *mut Extra;
-      let box_ptr = *space_ptr;
-      if box_ptr.is_null() {
-        None
-      } else {
-        Some(&mut **box_ptr)
-      }
-    }
+  /// Unwrap and downcast extra to typed.
+  ///
+  /// # Panics
+  ///
+  /// Panics if state has no attached `Extra` or it's impossible to downcast to `T`.
+  ///
+  pub fn with_extra_typed<T, F, R>(&mut self, closure: F) -> R
+    where T: any::Any, F: FnOnce(&mut T) -> R {
+    self.with_extra(|extra| {
+      let data = extra.as_mut().unwrap()
+        .downcast_mut::<T>().unwrap();
+      closure(data)
+    })
   }
 
   /// Maps to `lua_tonumber`.
@@ -1625,8 +1626,11 @@ impl State {
 impl Drop for State {
   fn drop(&mut self) {
     if self.owned {
-      let _ = self.set_extra(None);
-      unsafe { ffi::lua_close(self.L) }
+      unsafe {
+        let extra_ptr = ffi::lua_getextraspace(self.L) as ExtraHolder;
+        ptr::drop_in_place(*extra_ptr);
+        ffi::lua_close(self.L);
+      }
     }
   }
 }
