@@ -22,7 +22,7 @@
 
 //! Contains definitions from `lualib.h`.
 
-use ffi::lua::lua_State;
+use lua::lua_State;
 use libc::c_int;
 
 pub use super::glue::{

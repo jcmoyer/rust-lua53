@@ -23,12 +23,10 @@
 //! Rust bindings for Lua 5.3 and beyond documentation.
 //! Original Lua library documentation [here](https://www.lua.org/manual/5.3/).
 
-#![crate_name = "lua"]
-#![crate_type = "lib"]
-
-pub extern crate libc;
 #[macro_use]
 extern crate bitflags;
+pub extern crate lua_sys as ffi;
+
 
 pub use wrapper::state::{
   State,
@@ -56,6 +54,7 @@ pub use wrapper::convert::{
   FromLua
 };
 
+pub use ffi::libc;
 pub use ffi::lua_Number as Number;
 pub use ffi::lua_Integer as Integer;
 pub use ffi::lua_CFunction as Function;
@@ -65,7 +64,6 @@ pub use ffi::lua_Hook as Hook;
 /// Integer type used to index the Lua stack, usually `i32`.
 pub type Index = libc::c_int;
 
-pub mod ffi;
 mod wrapper;
 
 #[doc(hidden)]

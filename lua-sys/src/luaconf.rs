@@ -22,18 +22,18 @@
 
 //! Contains definitions from `luaconf.h`.
 
-pub use super::glue::LUAL_BUFFERSIZE;
-pub use super::glue::LUA_NUMBER;
-pub use super::glue::LUA_INTEGER;
-pub use super::glue::LUA_UNSIGNED;
+pub use glue::LUAL_BUFFERSIZE;
+pub use glue::LUA_NUMBER;
+pub use glue::LUA_INTEGER;
+pub use glue::LUA_UNSIGNED;
 
-pub use super::glue::{LUA_IDSIZE};
-pub use super::glue::{LUA_MININTEGER, LUA_MAXINTEGER};
+pub use glue::{LUA_IDSIZE};
+pub use glue::{LUA_MININTEGER, LUA_MAXINTEGER};
 
-pub use super::glue::LUAI_MAXSTACK;
-pub use super::glue::LUAL_NUMSIZES;
+pub use glue::LUAI_MAXSTACK;
+pub use glue::LUAL_NUMSIZES;
 
-pub use super::glue::LUA_KCONTEXT;
+pub use glue::LUA_KCONTEXT;
 
 use libc::c_int;
 

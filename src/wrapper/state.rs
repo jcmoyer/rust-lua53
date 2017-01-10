@@ -22,8 +22,8 @@
 
 use ffi;
 use ffi::{lua_State, lua_Debug};
+use ffi::libc::{c_int, c_void, c_char, size_t};
 
-use libc::{c_int, c_void, c_char, size_t};
 use std::{mem, ptr, str, slice, any};
 use std::ffi::{CString, CStr};
 use std::ops::DerefMut;
@@ -240,7 +240,7 @@ impl Reference {
 
 bitflags! {
   #[doc="Hook point masks for `lua_sethook`."]
-  flags HookMask: c_int {
+  pub flags HookMask: c_int {
     #[doc="Called when the interpreter calls a function."]
     const MASKCALL  = ffi::LUA_MASKCALL,
     #[doc="Called when the interpreter returns from a function."]

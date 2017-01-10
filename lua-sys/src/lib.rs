@@ -22,7 +22,10 @@
 
 //! Low level bindings to Lua.
 
+#![cfg_attr(not(feature = "use_std"), no_std)]
 #![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+pub extern crate libc;
 
 // This is more or less in the order it appears in the Lua manual, with the
 // exception of constants, which appear scattered throughout the manual text.
@@ -301,4 +304,3 @@ mod luaconf;
 mod lua;
 mod lauxlib;
 mod lualib;
-
