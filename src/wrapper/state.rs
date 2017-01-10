@@ -191,6 +191,7 @@ impl Library {
     }
   }
   /// Returns C function that may be used to load the library
+  #[allow(non_snake_case)]
   pub fn loader(&self) -> unsafe extern fn (L: *mut lua_State) -> c_int {
     use self::Library::*;
     match *self {
