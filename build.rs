@@ -6,6 +6,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::ffi::OsString;
+use std::ffi::OsStr;
 
 trait CommandExt {
     fn execute(&mut self) -> io::Result<()>;
@@ -25,7 +26,7 @@ impl CommandExt for Command {
     }
 }
 
-/// The command to build lua, with switches for different OSes.
+/// The command to build lua, with switches for different *nix targets.
 fn build_lua(tooling: &gcc::Tool, source: &Path, build: &Path) -> io::Result<()> {
     // calculate the Lua platform name
     let platform = match env::var("TARGET").unwrap().split('-').nth(2).unwrap() {
@@ -69,51 +70,107 @@ fn build_lua(tooling: &gcc::Tool, source: &Path, build: &Path) -> io::Result<()>
         .execute()
 }
 
+
+/// Ensure we have cl.exe and lib.exe at our disposal.
+fn verify_msvc_environment() {
+    let found_cl_exe = Command::new("cl.exe").arg("/help").output().is_ok();
+    let found_lib_exe = Command::new("lib.exe").arg("/help").output().is_ok();
+
+    if !found_cl_exe || !found_lib_exe {
+        panic!("cl.exe and lib.exe must be on your %PATH% to compile Lua for MSVC.\n\
+        Please install this crate through the Visual Studio Native Tools Command Line.");
+    }
+}
+
+/// Compile liblua.lib for use with MSVC flavored Rust.
+fn build_lua_msvc(source: &Path) -> io::Result<()>{
+    verify_msvc_environment();
+    let source_str = source.as_os_str().to_str().unwrap();
+    // Compile our .obj files
+    let mut compile_cmd = Command::new("cl.exe");
+    compile_cmd.current_dir(&source);
+    // Give cl.exe our .c files.
+    for file_res in fs::read_dir(source).unwrap() {
+        let dir_entry = file_res.unwrap();
+        let file_name = dir_entry.file_name().into_string().unwrap();
+        if file_name.ends_with(".c") && file_name != "luac.c" {
+            compile_cmd.arg(file_name);
+        }
+    }
+    compile_cmd.arg("/c") // Don't link. Just generate .obj files.
+        .arg("/MP") // Builds multiple source files concurrently.
+        .arg(format!("/Fo{}\\", &source_str)) // Output to the build folder
+        .arg("/nologo"); // Prevent stdout pollution
+        //.arg("/LD") // Not sure if I need this or not.
+    compile_cmd.execute().unwrap(); // Block until compilation is complete.
+    // Link our .obj files into liblua.lib.
+    let mut lib_cmd = Command::new("lib.exe");
+    lib_cmd.current_dir(&source);
+    for file_res in fs::read_dir(source).unwrap() {
+        let dir_entry = file_res.unwrap();
+        let file_name = dir_entry.file_name().into_string().unwrap();
+        if file_name.ends_with(".obj") {
+            lib_cmd.arg(file_name);
+        }
+    }
+    lib_cmd.arg(format!("/out:{}\\lua.lib", &source_str)) // Output file
+        .arg("/NOLOGO");
+    lib_cmd.execute()
+}
+
 /// If a static Lua is not yet available from a prior run of this script, this
 /// will download Lua and build it. The cargo configuration text to link
-/// statically against lua.a is then printed to stdout.
+/// statically against liblua.a/liblua.lib is then printed to stdout.
 fn prebuild() -> io::Result<()> {
-    let lua_dir = match env::var_os("LUA_LOCAL_SOURCE") {
+    let lua_dir : PathBuf = match env::var_os("LUA_LOCAL_SOURCE") {
         // If LUA_LOCAL_SOURCE is set, use it
         Some(dir) => PathBuf::from(dir),
         // Otherwise, pull from lua-source/src in the crate root
         None => {
             let mut dir = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
-            dir.push("lua-source/src");
+            dir.push(OsStr::new("lua-source/src").to_str().unwrap());
             dir
         }
     };
     let build_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let mut config = gcc::Config::new();
-
+    let msvc = env::var("TARGET").unwrap().split('-').last().unwrap() == "msvc";
     println!("cargo:rustc-link-lib=static=lua");
-    if lua_dir.join("liblua.a").exists() {
-        // If liblua.a is already in lua_dir, use it
-        println!("cargo:rustc-link-search=native={}", lua_dir.display());
+    if !msvc && lua_dir.join("liblua.a").exists() {
+        // If liblua.a/liblua.lib is already in lua_dir, use it
+        println!("cargo:rustc-link-search=native={}", &lua_dir.display());
+    } else if msvc {
+        if msvc && lua_dir.join("liblua.lib").exists() {
+            // Build for MSVC
+            try!(build_lua_msvc(&lua_dir));
+        }
+        println!("cargo:rustc-link-search=native={}", &lua_dir.display());
     } else {
-        // Otherwise, build from lua_dir into build_dir
+        // Check build_dir
         if !build_dir.join("liblua.a").exists() {
+            // Build liblua.a
             let tooling = config.get_compiler();
             try!(fs::create_dir_all(&build_dir));
             try!(build_lua(&tooling, &lua_dir, &build_dir));
         }
-        println!("cargo:rustc-link-search=native={}", build_dir.display());
+        println!("cargo:rustc-link-search=native={}", lua_dir.display());
     }
-
-    // Ensure the presence of glue.rs
-    if !build_dir.join("glue.rs").exists() {
-        // Compile and run glue.c
-        let glue = build_dir.join("glue");
-        try!(config.include(&lua_dir).get_compiler().to_command()
-            .arg("-I").arg(&lua_dir)
-            .arg("src/glue/glue.c")
-            .arg("-o").arg(&glue)
-            .execute());
-        try!(Command::new(glue)
-            .arg(build_dir.join("glue.rs"))
-            .execute());
-    }
-
+    // If we didn't have and couldn't build a suitable static lib,
+    // we will have errored by now.
+    
+        // Ensure the presence of glue.rs
+        if !build_dir.join("glue.rs").exists() {
+            // Compile and run glue.c
+            let glue = build_dir.join("glue");
+            try!(config.include(&lua_dir).get_compiler().to_command()
+                .arg("-I").arg(&lua_dir)
+                .arg("src/glue/glue.c")
+                .arg("-o").arg(&glue)
+                .execute());
+            try!(Command::new(glue)
+                .arg(build_dir.join("glue.rs"))
+                .execute());
+        }
     Ok(())
 }
 
