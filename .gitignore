@@ -1,6 +1,3 @@
 /Cargo.lock
 /target/
-lua-source/src/*.obj
-lua-source/src/*.lib
-lua-source/src/*.a
 *.obj

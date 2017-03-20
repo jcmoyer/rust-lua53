@@ -83,9 +83,9 @@ fn verify_msvc_environment() {
 }
 
 /// Compile liblua.lib for use with MSVC flavored Rust.
-fn build_lua_msvc(source: &Path) -> io::Result<()>{
+fn build_lua_msvc(source: &Path, build: &Path) -> io::Result<()>{
     verify_msvc_environment();
-    let source_str = source.as_os_str().to_str().unwrap();
+    let build_str = build.as_os_str().to_str().unwrap();
     // Compile our .obj files
     let mut compile_cmd = Command::new("cl.exe");
     compile_cmd.current_dir(&source);
@@ -99,21 +99,21 @@ fn build_lua_msvc(source: &Path) -> io::Result<()>{
     }
     compile_cmd.arg("/c") // Don't link. Just generate .obj files.
         .arg("/MP") // Builds multiple source files concurrently.
-        .arg(format!("/Fo{}\\", &source_str)) // Output to the build folder
+        .arg(format!("/Fo{}\\", &build_str)) // Output to the build folder
         .arg("/nologo"); // Prevent stdout pollution
         //.arg("/LD") // Not sure if I need this or not.
     compile_cmd.execute().unwrap(); // Block until compilation is complete.
     // Link our .obj files into liblua.lib.
     let mut lib_cmd = Command::new("lib.exe");
-    lib_cmd.current_dir(&source);
-    for file_res in fs::read_dir(source).unwrap() {
+    lib_cmd.current_dir(&build);
+    for file_res in fs::read_dir(build).unwrap() {
         let dir_entry = file_res.unwrap();
         let file_name = dir_entry.file_name().into_string().unwrap();
         if file_name.ends_with(".obj") {
             lib_cmd.arg(file_name);
         }
     }
-    lib_cmd.arg(format!("/out:{}\\lua.lib", &source_str)) // Output file
+    lib_cmd.arg(format!("/out:{}\\lua.lib", &build_str)) // Output file
         .arg("/NOLOGO");
     lib_cmd.execute()
 }
@@ -137,14 +137,13 @@ fn prebuild() -> io::Result<()> {
     let msvc = env::var("TARGET").unwrap().split('-').last().unwrap() == "msvc";
     println!("cargo:rustc-link-lib=static=lua");
     if !msvc && lua_dir.join("liblua.a").exists() {
-        // If liblua.a/liblua.lib is already in lua_dir, use it
+        // If liblua.a is already in lua_dir, use it
         println!("cargo:rustc-link-search=native={}", &lua_dir.display());
     } else if msvc {
-        if msvc && lua_dir.join("liblua.lib").exists() {
-            // Build for MSVC
-            try!(build_lua_msvc(&lua_dir));
+        if !build_dir.join("lua.lib").exists() {
+            try!(build_lua_msvc(&lua_dir, &build_dir));
         }
-        println!("cargo:rustc-link-search=native={}", &lua_dir.display());
+        println!("cargo:rustc-link-search=native={}", &build_dir.display());
     } else {
         // Check build_dir
         if !build_dir.join("liblua.a").exists() {
@@ -155,22 +154,20 @@ fn prebuild() -> io::Result<()> {
         }
         println!("cargo:rustc-link-search=native={}", lua_dir.display());
     }
-    // If we didn't have and couldn't build a suitable static lib,
-    // we will have errored by now.
     
-        // Ensure the presence of glue.rs
-        if !build_dir.join("glue.rs").exists() {
-            // Compile and run glue.c
-            let glue = build_dir.join("glue");
-            try!(config.include(&lua_dir).get_compiler().to_command()
-                .arg("-I").arg(&lua_dir)
-                .arg("src/glue/glue.c")
-                .arg("-o").arg(&glue)
-                .execute());
-            try!(Command::new(glue)
-                .arg(build_dir.join("glue.rs"))
-                .execute());
-        }
+    // Ensure the presence of glue.rs
+    if !build_dir.join("glue.rs").exists() {
+        // Compile and run glue.c
+        let glue = build_dir.join("glue");
+        try!(config.include(&lua_dir).get_compiler().to_command()
+            .arg("-I").arg(&lua_dir)
+            .arg("src/glue/glue.c")
+            .arg("-o").arg(&glue)
+            .execute());
+        try!(Command::new(glue)
+            .arg(build_dir.join("glue.rs"))
+            .execute());
+    }
     Ok(())
 }
 
