@@ -152,7 +152,7 @@ fn prebuild() -> io::Result<()> {
             try!(fs::create_dir_all(&build_dir));
             try!(build_lua(&tooling, &lua_dir, &build_dir));
         }
-        println!("cargo:rustc-link-search=native={}", lua_dir.display());
+        println!("cargo:rustc-link-search=native={}", &build_dir.display());
     }
     
     // Ensure the presence of glue.rs
