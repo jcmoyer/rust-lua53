@@ -700,6 +700,11 @@ impl State {
     unsafe { ffi::lua_pushlstring(self.L, s.as_ptr() as *const _, s.len() as size_t) };
   }
 
+  /// Maps to `lua_pushlstring`.
+  pub fn push_bytes(&mut self, s: &[u8]) {
+    unsafe { ffi::lua_pushlstring(self.L, s.as_ptr() as *const i8, s.len() as size_t) };
+  }
+
   // omitted: lua_pushvfstring
   // omitted: lua_pushfstring
 
@@ -1323,6 +1328,20 @@ impl State {
     } else {
       let slice = unsafe { slice::from_raw_parts(ptr as *const u8, len as usize) };
       str::from_utf8(slice).ok()
+    }
+  }
+
+  /// Maps to `lua_tolstring`, but allows arbitrary bytes.
+  /// This function returns a reference to the string at the given index,
+  /// on which `to_owned` may be called.
+  pub fn to_bytes_in_place(&mut self, index: Index) -> Option<&[u8]> {
+    let mut len = 0;
+    let ptr = unsafe { ffi::lua_tolstring(self.L, index, &mut len) };
+    if ptr.is_null() {
+      None
+    } else {
+      let slice = unsafe { slice::from_raw_parts(ptr as *const u8, len as usize) };
+      Some(slice)
     }
   }
 
