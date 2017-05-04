@@ -39,6 +39,12 @@ impl<'a> ToLua for &'a str {
   }
 }
 
+impl<'a> ToLua for &'a [u8] {
+  fn to_lua(&self, state: &mut State) {
+    state.push_bytes(*self);
+  }
+}
+
 impl ToLua for String {
   fn to_lua(&self, state: &mut State) {
     state.push_string(&self);
@@ -99,6 +105,12 @@ pub trait FromLua: Sized {
 impl FromLua for String {
   fn from_lua(state: &mut State, index: Index) -> Option<String> {
     state.to_str(index).map(ToOwned::to_owned)
+  }
+}
+
+impl FromLua for Vec<u8> {
+  fn from_lua(state: &mut State, index: Index) -> Option<Vec<u8>> {
+    state.to_bytes_in_place(index).map(ToOwned::to_owned)
   }
 }
 
