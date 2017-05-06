@@ -916,11 +916,11 @@ impl State {
 
   // TODO: mode typing?
   /// Maps to `lua_load`.
-  pub fn load<F>(&mut self, mut reader: F, source: &str, mode: &str) -> ThreadStatus
-    where F: FnMut(&mut State) -> &[u8]
+  pub fn load<'l, F>(&'l mut self, mut reader: F, source: &str, mode: &str) -> ThreadStatus
+    where F: FnMut(&mut State) -> &'l [u8]
   {
-    unsafe extern fn read<F>(st: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char
-      where F: FnMut(&mut State) -> &[u8]
+    unsafe extern fn read<'l, F>(st: *mut lua_State, ud: *mut c_void, sz: *mut size_t) -> *const c_char
+      where F: FnMut(&mut State) -> &'l [u8]
     {
       let mut state = State::from_ptr(st);
       let slice = mem::transmute::<_, &mut F>(ud)(&mut state);
