@@ -505,12 +505,12 @@ impl State {
   // Basic stack manipulation
   //===========================================================================
   /// Maps to `lua_absindex`.
-  pub fn abs_index(&mut self, idx: Index) -> Index {
+  pub fn abs_index(&self, idx: Index) -> Index {
     unsafe { ffi::lua_absindex(self.L, idx) }
   }
 
   /// Maps to `lua_gettop`.
-  pub fn get_top(&mut self) -> Index {
+  pub fn get_top(&self) -> Index {
     unsafe { ffi::lua_gettop(self.L) }
   }
 
@@ -549,38 +549,38 @@ impl State {
   // Access functions (stack -> C)
   //===========================================================================
   /// Maps to `lua_isnumber`.
-  pub fn is_number(&mut self, index: Index) -> bool {
+  pub fn is_number(&self, index: Index) -> bool {
     unsafe { ffi::lua_isnumber(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isstring`.
-  pub fn is_string(&mut self, index: Index) -> bool {
+  pub fn is_string(&self, index: Index) -> bool {
     unsafe { ffi::lua_isstring(self.L, index) == 1 }
   }
 
   /// Maps to `lua_iscfunction`.
-  pub fn is_native_fn(&mut self, index: Index) -> bool {
+  pub fn is_native_fn(&self, index: Index) -> bool {
     unsafe { ffi::lua_iscfunction(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isinteger`.
-  pub fn is_integer(&mut self, index: Index) -> bool {
+  pub fn is_integer(&self, index: Index) -> bool {
     unsafe { ffi::lua_isinteger(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isuserdata`.
-  pub fn is_userdata(&mut self, index: Index) -> bool {
+  pub fn is_userdata(&self, index: Index) -> bool {
     unsafe { ffi::lua_isuserdata(self.L, index) == 1 }
   }
 
   /// Maps to `lua_type`.
-  pub fn type_of(&mut self, index: Index) -> Option<Type> {
+  pub fn type_of(&self, index: Index) -> Option<Type> {
     let result = unsafe { ffi::lua_type(self.L, index) };
     Type::from_c_int(result)
   }
 
   /// Maps to `lua_typename`.
-  pub fn typename_of(&mut self, tp: Type) -> &'static str {
+  pub fn typename_of(&self, tp: Type) -> &'static str {
     unsafe {
       let ptr = ffi::lua_typename(self.L, tp as c_int);
       let slice = CStr::from_ptr(ptr).to_bytes();
@@ -619,7 +619,7 @@ impl State {
   // omitted: lua_tolstring
 
   /// Maps to `lua_rawlen`.
-  pub fn raw_len(&mut self, index: Index) -> size_t {
+  pub fn raw_len(&self, index: Index) -> size_t {
     unsafe { ffi::lua_rawlen(self.L, index) }
   }
 
@@ -1113,42 +1113,42 @@ impl State {
   }
 
   /// Maps to `lua_isfunction`.
-  pub fn is_fn(&mut self, index: Index) -> bool {
+  pub fn is_fn(&self, index: Index) -> bool {
     unsafe { ffi::lua_isfunction(self.L, index) == 1 }
   }
 
   /// Maps to `lua_istable`.
-  pub fn is_table(&mut self, index: Index) -> bool {
+  pub fn is_table(&self, index: Index) -> bool {
     unsafe { ffi::lua_istable(self.L, index) == 1 }
   }
 
   /// Maps to `lua_islightuserdata`.
-  pub fn is_light_userdata(&mut self, index: Index) -> bool {
+  pub fn is_light_userdata(&self, index: Index) -> bool {
     unsafe { ffi::lua_islightuserdata(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isnil`.
-  pub fn is_nil(&mut self, index: Index) -> bool {
+  pub fn is_nil(&self, index: Index) -> bool {
     unsafe { ffi::lua_isnil(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isboolean`.
-  pub fn is_bool(&mut self, index: Index) -> bool {
+  pub fn is_bool(&self, index: Index) -> bool {
     unsafe { ffi::lua_isboolean(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isthread`.
-  pub fn is_thread(&mut self, index: Index) -> bool {
+  pub fn is_thread(&self, index: Index) -> bool {
     unsafe { ffi::lua_isthread(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isnone`.
-  pub fn is_none(&mut self, index: Index) -> bool {
+  pub fn is_none(&self, index: Index) -> bool {
     unsafe { ffi::lua_isnone(self.L, index) == 1 }
   }
 
   /// Maps to `lua_isnoneornil`.
-  pub fn is_none_or_nil(&mut self, index: Index) -> bool {
+  pub fn is_none_or_nil(&self, index: Index) -> bool {
     unsafe { ffi::lua_isnoneornil(self.L, index) == 1 }
   }
 
@@ -1618,7 +1618,7 @@ impl State {
   // omitted: luaL_optlong (use .opt_integer)
 
   /// Maps to `luaL_typename`.
-  pub fn typename_at(&mut self, n: Index) -> &'static str {
+  pub fn typename_at(&self, n: Index) -> &'static str {
     let typeid = self.type_of(n).unwrap();
     self.typename_of(typeid)
   }
