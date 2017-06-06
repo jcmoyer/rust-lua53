@@ -219,7 +219,8 @@ impl<'a> Serializer for LuaSerializer<'a> {
     type SerializeStruct = SerializeStruct<'a>;
     type SerializeStructVariant = SerializeStructVariant<'a>;
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_bool(v);
+        Ok(())
     }
     fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
         self.0.push_integer(v as i64);
@@ -382,6 +383,13 @@ mod test {
 
     use {State};
     use super::Serde;
+
+    #[test]
+    fn serialize_bool() {
+      let mut state = State::new();
+      state.push(Serde(&true));
+      state.push(Serde(&false));
+    }
 
     #[test]
     fn serialize_str() {
