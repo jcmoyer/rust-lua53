@@ -235,7 +235,8 @@ impl<'a> Serializer for LuaSerializer<'a> {
         unimplemented!();
     }
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_nil();
+        Ok(())
     }
     fn serialize_some<T: ?Sized>(
         self,
@@ -244,7 +245,7 @@ impl<'a> Serializer for LuaSerializer<'a> {
     where
         T: Serialize
     {
-        unimplemented!();
+        value.serialize(self)
     }
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
         unimplemented!();
@@ -384,5 +385,12 @@ mod test {
     fn serialize_char() {
       let mut state = State::new();
       state.push(Serde(&'x'));
+    }
+
+    #[test]
+    fn serialize_option() {
+      let mut state = State::new();
+      state.push(Serde(&Some("hello")));
+      state.push(Serde(&None::<&str>));
     }
 }
