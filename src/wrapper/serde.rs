@@ -224,7 +224,8 @@ impl<'a> Serializer for LuaSerializer<'a> {
         Ok(())
     }
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_string(&v.to_string());
+        Ok(())
     }
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
         self.0.push_string(v);
@@ -377,5 +378,11 @@ mod test {
       let mut state = State::new();
       state.push(Serde(&1.0f32));
       state.push(Serde(&1.0f64));
+    }
+
+    #[test]
+    fn serialize_char() {
+      let mut state = State::new();
+      state.push(Serde(&'x'));
     }
 }
