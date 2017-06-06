@@ -14,14 +14,21 @@ struct SerializeSeq<'a> {
     table_index: i32,
     current_subscript: i32
 }
+
 struct SerializeTuple<'a>(&'a mut State);
 struct SerializeTupleStruct<'a>(&'a mut State);
 struct SerializeTupleVariant<'a>(&'a mut State);
+
 struct SerializeMap<'a> {
     state: &'a mut State,
     table_index: i32,
 }
-struct SerializeStruct<'a>(&'a mut State);
+
+struct SerializeStruct<'a> {
+    state: &'a mut State,
+    table_index: i32,
+}
+
 struct SerializeStructVariant<'a>(&'a mut State);
 
 
@@ -169,21 +176,30 @@ impl<'a> ser::SerializeMap for SerializeMap<'a> {
     }
 }
 
+impl<'a> SerializeStruct<'a> {
+    fn new(state: &'a mut State, fields: i32) -> SerializeStruct<'a> {
+        state.create_table(0, fields);
+        SerializeStruct {
+            table_index: state.get_top(),
+            state,
+        }
+    }
+}
+
 impl<'a> ser::SerializeStruct for SerializeStruct<'a> {
     type Ok = ();
     type Error = Error;
-    fn serialize_field<T: ?Sized>(
-        &mut self,
-        key: &'static str,
-        value: &T
-    ) -> Result<(), Self::Error>
-    where
-        T: Serialize
+    fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T)
+        -> Result<(), Self::Error>
+        where T: Serialize
     {
-        unimplemented!();
+        value.serialize(LuaSerializer(self.state))?;
+        self.state.set_field(self.table_index, key);
+        Ok(())
     }
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        // table is already at the top of the stack
+        Ok(())
     }
 }
 
@@ -360,12 +376,14 @@ impl<'a> Serializer for LuaSerializer<'a> {
     {
         Ok(SerializeMap::new(self.0, len.map(|x| x as i32).unwrap_or(0)))
     }
-    fn serialize_struct(
-        self,
-        name: &'static str,
-        len: usize
-    ) -> Result<Self::SerializeStruct, Self::Error> {
-        unimplemented!();
+    fn serialize_struct(self, name: &'static str, len: usize)
+        -> Result<Self::SerializeStruct, Self::Error>
+    {
+        if len <= i32::MAX as usize {
+            Ok(SerializeStruct::new(self.0, len as i32))
+        } else {
+            return Err(ErrorEnum::TableSizeTooLarge(len as u64).into());
+        }
     }
     fn serialize_struct_variant(
         self,
@@ -388,6 +406,7 @@ impl<'a, T: Serialize + 'a> ToLua for Serde<'a, T> {
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
+    use std::time::Duration;
 
     use {State};
     use super::Serde;
@@ -456,4 +475,14 @@ mod test {
       ].into_iter().collect::<HashMap<_, _>>();
       state.push(Serde(&x));
     }
+
+    #[test]
+    fn serialize_struct() {
+      let mut state = State::new();
+      // Duration is serialized as a struct with two fields
+      // so we can test it without using `serde_derive`
+      state.push(Serde(&Duration::from_millis(12345)));
+    }
+
+
 }
