@@ -291,7 +291,8 @@ impl<'a> Serializer for LuaSerializer<'a> {
         value.serialize(self)
     }
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_nil();
+        Ok(())
     }
     fn serialize_unit_struct(self, _name: &'static str)
         -> Result<Self::Ok, Self::Error>
@@ -389,6 +390,12 @@ mod test {
       let mut state = State::new();
       state.push(Serde(&true));
       state.push(Serde(&false));
+    }
+
+    #[test]
+    fn serialize_unit() {
+      let mut state = State::new();
+      state.push(Serde(&()));
     }
 
     #[test]
