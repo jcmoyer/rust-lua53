@@ -17,7 +17,10 @@ struct SerializeSeq<'a> {
 struct SerializeTuple<'a>(&'a mut State);
 struct SerializeTupleStruct<'a>(&'a mut State);
 struct SerializeTupleVariant<'a>(&'a mut State);
-struct SerializeMap<'a>(&'a mut State);
+struct SerializeMap<'a> {
+    state: &'a mut State,
+    table_index: i32,
+}
 struct SerializeStruct<'a>(&'a mut State);
 struct SerializeStructVariant<'a>(&'a mut State);
 
@@ -130,6 +133,16 @@ impl<'a> ser::SerializeTupleVariant for SerializeTupleVariant<'a> {
     }
 }
 
+impl<'a> SerializeMap<'a> {
+    fn new(state: &'a mut State, prealloc: i32) -> SerializeMap<'a> {
+        state.create_table(0, prealloc);
+        SerializeMap {
+            table_index: state.get_top(),
+            state,
+        }
+    }
+}
+
 impl<'a> ser::SerializeMap for SerializeMap<'a> {
     type Ok = ();
     type Error = Error;
@@ -137,7 +150,7 @@ impl<'a> ser::SerializeMap for SerializeMap<'a> {
     where
         T: Serialize
     {
-        unimplemented!();
+        key.serialize(LuaSerializer(self.state))
     }
     fn serialize_value<T: ?Sized>(
         &mut self,
@@ -146,10 +159,13 @@ impl<'a> ser::SerializeMap for SerializeMap<'a> {
     where
         T: Serialize
     {
-        unimplemented!();
+        value.serialize(LuaSerializer(self.state))?;
+        self.state.raw_set(self.table_index);
+        Ok(())
     }
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        // table is already at the top of the stack
+        Ok(())
     }
 }
 
@@ -339,11 +355,10 @@ impl<'a> Serializer for LuaSerializer<'a> {
     ) -> Result<Self::SerializeTupleVariant, Self::Error> {
         unimplemented!();
     }
-    fn serialize_map(
-        self,
-        len: Option<usize>
-    ) -> Result<Self::SerializeMap, Self::Error> {
-        unimplemented!();
+    fn serialize_map(self, len: Option<usize>)
+        -> Result<Self::SerializeMap, Self::Error>
+    {
+        Ok(SerializeMap::new(self.0, len.map(|x| x as i32).unwrap_or(0)))
     }
     fn serialize_struct(
         self,
@@ -372,6 +387,8 @@ impl<'a, T: Serialize + 'a> ToLua for Serde<'a, T> {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use {State};
     use super::Serde;
 
@@ -427,6 +444,16 @@ mod test {
       let x: &[u32] = &[1, 2, 3];
       state.push(Serde(&x));
       let x = vec![1, 2, 3];
+      state.push(Serde(&x));
+    }
+
+    #[test]
+    fn serialize_map() {
+      let mut state = State::new();
+      let x = vec![
+        ("x", 1),
+        ("y", 2),
+      ].into_iter().collect::<HashMap<_, _>>();
       state.push(Serde(&x));
     }
 }
