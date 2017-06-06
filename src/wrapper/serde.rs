@@ -1,5 +1,5 @@
 use std::fmt;
-use std::i64;
+use std::{i32, i64};
 use serde::{Serialize, Serializer, ser};
 
 use wrapper::convert::ToLua;
@@ -9,7 +9,11 @@ pub struct Serde<'a, S: Serialize + ?Sized + 'a>(&'a S);
 
 struct LuaSerializer<'a>(&'a mut State);
 
-struct SerializeSeq<'a>(&'a mut State);
+struct SerializeSeq<'a> {
+    state: &'a mut State,
+    table_index: i32,
+    current_subscript: i32
+}
 struct SerializeTuple<'a>(&'a mut State);
 struct SerializeTupleStruct<'a>(&'a mut State);
 struct SerializeTupleVariant<'a>(&'a mut State);
@@ -29,6 +33,10 @@ quick_error! {
             display("integer {} is too large for lua", v)
             description("integer is too large for lua")
         }
+        TableSizeTooLarge(v: u64) {
+            display("table size {} is too large for lua", v)
+            description("table size is too large for lua (31 bits max)")
+        }
     }
 }
 
@@ -38,21 +46,36 @@ impl ser::Error for Error {
     }
 }
 
+impl<'a> SerializeSeq<'a> {
+    fn new(state: &'a mut State, prealloc: i32) -> SerializeSeq<'a> {
+        state.create_table(prealloc, 0);
+        SerializeSeq {
+            table_index: state.get_top(),
+            current_subscript: 0,
+            state,
+        }
+    }
+}
 
 impl<'a> ser::SerializeSeq for SerializeSeq<'a> {
     type Ok = ();
     type Error = Error;
-    fn serialize_element<T: ?Sized>(
-        &mut self,
-        value: &T
-    ) -> Result<(), Self::Error>
-    where
-        T: Serialize
+    fn serialize_element<T: ?Sized>(&mut self, value: &T)
+        -> Result<(), Self::Error>
+        where T: Serialize
     {
-        unimplemented!();
+        if self.current_subscript == i32::MAX {
+            return Err(ErrorEnum::TableSizeTooLarge(
+                self.current_subscript as u64).into());
+        }
+        self.current_subscript += 1;
+        value.serialize(LuaSerializer(self.state));
+        self.state.raw_seti(self.table_index, self.current_subscript as i64);
+        Ok(())
     }
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        // table is already at the top of the stack
+        Ok(())
     }
 }
 
@@ -281,14 +304,18 @@ impl<'a> Serializer for LuaSerializer<'a> {
         value: &T
     ) -> Result<Self::Ok, Self::Error>
     where
-        T: Serialize {
+        T: Serialize
+    {
         unimplemented!();
     }
-    fn serialize_seq(
-        self,
-        len: Option<usize>
-    ) -> Result<Self::SerializeSeq, Self::Error> {
-        unimplemented!();
+    fn serialize_seq(self, len: Option<usize>)
+        -> Result<Self::SerializeSeq, Self::Error>
+    {
+        if len.map(|x| x <= i32::MAX as usize).unwrap_or(true) {
+            Ok(SerializeSeq::new(self.0, len.map(|x| x as i32).unwrap_or(0)))
+        } else {
+            Err(ErrorEnum::IntegerTooLarge(len.unwrap() as u64).into())
+        }
     }
     fn serialize_tuple(
         self,
@@ -392,5 +419,14 @@ mod test {
       let mut state = State::new();
       state.push(Serde(&Some("hello")));
       state.push(Serde(&None::<&str>));
+    }
+
+    #[test]
+    fn serialize_list() {
+      let mut state = State::new();
+      let x: &[u32] = &[1, 2, 3];
+      state.push(Serde(&x));
+      let x = vec![1, 2, 3];
+      state.push(Serde(&x));
     }
 }
