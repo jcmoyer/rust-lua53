@@ -24,4 +24,6 @@
 
 pub mod convert;
 pub mod state;
+#[cfg(feature="serialize")]
+mod serde;
 
