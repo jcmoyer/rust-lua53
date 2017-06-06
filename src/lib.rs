@@ -60,6 +60,9 @@ pub use wrapper::convert::{
   FromLua
 };
 
+#[cfg(feature="serialize")]
+pub use wrapper::serde::Serde;
+
 pub use ffi::lua_Number as Number;
 pub use ffi::lua_Integer as Integer;
 pub use ffi::lua_CFunction as Function;

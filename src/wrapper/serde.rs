@@ -79,7 +79,7 @@ impl<'a> ser::SerializeSeq for SerializeSeq<'a> {
                 self.current_subscript as u64).into());
         }
         self.current_subscript += 1;
-        value.serialize(LuaSerializer(self.state));
+        value.serialize(LuaSerializer(self.state))?;
         self.state.raw_seti(self.table_index, self.current_subscript as i64);
         Ok(())
     }
@@ -92,12 +92,9 @@ impl<'a> ser::SerializeSeq for SerializeSeq<'a> {
 impl<'a> ser::SerializeTuple for SerializeTuple<'a> {
     type Ok = ();
     type Error = Error;
-    fn serialize_element<T: ?Sized>(
-        &mut self,
-        value: &T
-    ) -> Result<(), Self::Error>
-    where
-        T: Serialize
+    fn serialize_element<T: ?Sized>(&mut self, _value: &T)
+        -> Result<(), Self::Error>
+        where T: Serialize
     {
         unimplemented!();
     }
@@ -109,12 +106,9 @@ impl<'a> ser::SerializeTuple for SerializeTuple<'a> {
 impl<'a> ser::SerializeTupleStruct for SerializeTupleStruct<'a> {
     type Ok = ();
     type Error = Error;
-    fn serialize_field<T: ?Sized>(
-        &mut self,
-        value: &T
-    ) -> Result<(), Self::Error>
-    where
-        T: Serialize
+    fn serialize_field<T: ?Sized>(&mut self, _value: &T)
+        -> Result<(), Self::Error>
+        where T: Serialize
     {
         unimplemented!();
     }
@@ -126,12 +120,9 @@ impl<'a> ser::SerializeTupleStruct for SerializeTupleStruct<'a> {
 impl<'a> ser::SerializeTupleVariant for SerializeTupleVariant<'a> {
     type Ok = ();
     type Error = Error;
-    fn serialize_field<T: ?Sized>(
-        &mut self,
-        value: &T
-    ) -> Result<(), Self::Error>
-    where
-        T: Serialize
+    fn serialize_field<T: ?Sized>(&mut self, _value: &T)
+        -> Result<(), Self::Error>
+        where T: Serialize
     {
         unimplemented!();
     }
@@ -206,13 +197,9 @@ impl<'a> ser::SerializeStruct for SerializeStruct<'a> {
 impl<'a> ser::SerializeStructVariant for SerializeStructVariant<'a> {
     type Ok = ();
     type Error = Error;
-    fn serialize_field<T: ?Sized>(
-        &mut self,
-        key: &'static str,
-        value: &T
-    ) -> Result<(), Self::Error>
-    where
-        T: Serialize
+    fn serialize_field<T: ?Sized>(&mut self, _key: &'static str, _value: &T)
+        -> Result<(), Self::Error>
+        where T: Serialize
     {
         unimplemented!();
     }
@@ -286,7 +273,7 @@ impl<'a> Serializer for LuaSerializer<'a> {
         self.0.push_string(v);
         Ok(())
     }
-    fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+    fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
         unimplemented!();
     }
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
@@ -305,38 +292,29 @@ impl<'a> Serializer for LuaSerializer<'a> {
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
         unimplemented!();
     }
-    fn serialize_unit_struct(
-        self,
-        name: &'static str
-    ) -> Result<Self::Ok, Self::Error> {
+    fn serialize_unit_struct(self, _name: &'static str)
+        -> Result<Self::Ok, Self::Error>
+    {
         unimplemented!();
     }
-    fn serialize_unit_variant(
-        self,
-        name: &'static str,
-        variant_index: u32,
-        variant: &'static str
-    ) -> Result<Self::Ok, Self::Error> {
+    fn serialize_unit_variant(self,
+        _name: &'static str, _variant_index: u32, _variant: &'static str)
+        -> Result<Self::Ok, Self::Error>
+    {
         unimplemented!();
     }
-    fn serialize_newtype_struct<T: ?Sized>(
-        self,
-        name: &'static str,
-        value: &T
-    ) -> Result<Self::Ok, Self::Error>
-    where
-        T: Serialize {
+    fn serialize_newtype_struct<T: ?Sized>(self,
+        _name: &'static str, _value: &T)
+        -> Result<Self::Ok, Self::Error>
+        where T: Serialize
+    {
         unimplemented!();
     }
-    fn serialize_newtype_variant<T: ?Sized>(
-        self,
-        name: &'static str,
-        variant_index: u32,
-        variant: &'static str,
-        value: &T
-    ) -> Result<Self::Ok, Self::Error>
-    where
-        T: Serialize
+    fn serialize_newtype_variant<T: ?Sized>(self,
+        _name: &'static str, _variant_index: u32, _variant: &'static str,
+        _value: &T
+        ) -> Result<Self::Ok, Self::Error>
+        where T: Serialize
     {
         unimplemented!();
     }
@@ -349,26 +327,22 @@ impl<'a> Serializer for LuaSerializer<'a> {
             Err(ErrorEnum::IntegerTooLarge(len.unwrap() as u64).into())
         }
     }
-    fn serialize_tuple(
-        self,
-        len: usize
-    ) -> Result<Self::SerializeTuple, Self::Error> {
+    fn serialize_tuple(self, _len: usize)
+        -> Result<Self::SerializeTuple, Self::Error>
+    {
         unimplemented!();
     }
-    fn serialize_tuple_struct(
-        self,
-        name: &'static str,
-        len: usize
-    ) -> Result<Self::SerializeTupleStruct, Self::Error> {
+    fn serialize_tuple_struct(self,
+        _name: &'static str, _len: usize)
+        -> Result<Self::SerializeTupleStruct, Self::Error>
+    {
         unimplemented!();
     }
-    fn serialize_tuple_variant(
-        self,
-        name: &'static str,
-        variant_index: u32,
-        variant: &'static str,
-        len: usize
-    ) -> Result<Self::SerializeTupleVariant, Self::Error> {
+    fn serialize_tuple_variant(self,
+        _name: &'static str, _variant_index: u32, _variant: &'static str,
+        _len: usize)
+        -> Result<Self::SerializeTupleVariant, Self::Error>
+    {
         unimplemented!();
     }
     fn serialize_map(self, len: Option<usize>)
@@ -376,7 +350,7 @@ impl<'a> Serializer for LuaSerializer<'a> {
     {
         Ok(SerializeMap::new(self.0, len.map(|x| x as i32).unwrap_or(0)))
     }
-    fn serialize_struct(self, name: &'static str, len: usize)
+    fn serialize_struct(self, _name: &'static str, len: usize)
         -> Result<Self::SerializeStruct, Self::Error>
     {
         if len <= i32::MAX as usize {
@@ -385,13 +359,11 @@ impl<'a> Serializer for LuaSerializer<'a> {
             return Err(ErrorEnum::TableSizeTooLarge(len as u64).into());
         }
     }
-    fn serialize_struct_variant(
-        self,
-        name: &'static str,
-        variant_index: u32,
-        variant: &'static str,
-        len: usize
-    ) -> Result<Self::SerializeStructVariant, Self::Error> {
+    fn serialize_struct_variant(self,
+        _name: &'static str, _variant_index: u32, _variant: &'static str,
+        _len: usize)
+        -> Result<Self::SerializeStructVariant, Self::Error>
+    {
         unimplemented!();
     }
 }
