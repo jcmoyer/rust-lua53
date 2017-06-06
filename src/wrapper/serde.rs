@@ -1,4 +1,5 @@
 use std::fmt;
+use std::i64;
 use serde::{Serialize, Serializer, ser};
 
 use wrapper::convert::ToLua;
@@ -23,6 +24,10 @@ quick_error! {
         Custom(msg: String) {
             display("custom serialization error: {}", msg)
             description("custom serialization error")
+        }
+        IntegerTooLarge(v: u64) {
+            display("integer {} is too large for lua", v)
+            description("integer is too large for lua")
         }
     }
 }
@@ -175,34 +180,48 @@ impl<'a> Serializer for LuaSerializer<'a> {
         unimplemented!();
     }
     fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_integer(v as i64);
+        Ok(())
     }
     fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_integer(v as i64);
+        Ok(())
     }
     fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_integer(v as i64);
+        Ok(())
     }
     fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_integer(v);
+        Ok(())
     }
     fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_integer(v as i64);
+        Ok(())
     }
     fn serialize_u16(self, v: u16) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_integer(v as i64);
+        Ok(())
     }
     fn serialize_u32(self, v: u32) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_integer(v as i64);
+        Ok(())
     }
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        if v <= i64::MAX as u64 {
+            self.0.push_integer(v as i64);
+            Ok(())
+        } else {
+            Err(ErrorEnum::IntegerTooLarge(v).into())
+        }
     }
     fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_number(v as f64);
+        Ok(())
     }
     fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
-        unimplemented!();
+        self.0.push_number(v);
+        Ok(())
     }
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
         unimplemented!();
@@ -331,5 +350,32 @@ mod test {
     fn serialize_str() {
       let mut state = State::new();
       state.push(Serde(&"hello"));
+    }
+
+    #[test]
+    fn serialize_int() {
+      let mut state = State::new();
+      state.push(Serde(&1i8));
+      state.push(Serde(&1i16));
+      state.push(Serde(&1i32));
+      state.push(Serde(&1i64));
+      state.push(Serde(&1u8));
+      state.push(Serde(&1u16));
+      state.push(Serde(&1u32));
+      state.push(Serde(&1u64));
+    }
+
+    #[test]
+    #[should_panic(expected="IntegerTooLarge")]
+    fn serialize_big_int() {
+      let mut state = State::new();
+      state.push(Serde(&10000000000000000000u64));
+    }
+
+    #[test]
+    fn serialize_float() {
+      let mut state = State::new();
+      state.push(Serde(&1.0f32));
+      state.push(Serde(&1.0f64));
     }
 }
