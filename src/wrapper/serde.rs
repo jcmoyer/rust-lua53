@@ -5,7 +5,7 @@ use serde::{Serialize, Serializer, ser};
 use wrapper::convert::ToLua;
 use wrapper::state::State;
 
-pub struct Serde<'a, S: Serialize + ?Sized + 'a>(&'a S);
+pub struct Serde<'a, S: Serialize + ?Sized + 'a>(pub &'a S);
 
 struct LuaSerializer<'a>(&'a mut State);
 
