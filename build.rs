@@ -31,7 +31,7 @@ fn build_lua(tooling: &gcc::Tool, source: &Path, build: &Path) -> io::Result<()>
     // calculate the Lua platform name
     let platform = match env::var("TARGET").unwrap().split('-').nth(2).unwrap() {
         "windows" => "mingw",
-        "macos" => "macosx",
+        "darwin" => "macosx",
         "linux" => "linux",
         "freebsd" => "freebsd",
         "dragonfly" => "bsd",
