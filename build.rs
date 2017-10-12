@@ -133,7 +133,7 @@ fn prebuild() -> io::Result<()> {
         }
     };
     let build_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let mut config = gcc::Config::new();
+    let mut config = gcc::Build::new();
     let msvc = env::var("TARGET").unwrap().split('-').last().unwrap() == "msvc";
     println!("cargo:rustc-link-lib=static=lua");
     if !msvc && lua_dir.join("liblua.a").exists() {
@@ -154,7 +154,7 @@ fn prebuild() -> io::Result<()> {
         }
         println!("cargo:rustc-link-search=native={}", &build_dir.display());
     }
-    
+
     // Ensure the presence of glue.rs
     if !build_dir.join("glue.rs").exists() {
         // Compile and run glue.c
