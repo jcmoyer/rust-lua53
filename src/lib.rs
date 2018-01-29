@@ -29,6 +29,10 @@
 pub extern crate libc;
 #[macro_use]
 extern crate bitflags;
+#[macro_use]
+extern crate quick_error;
+#[cfg(feature="serialize")]
+extern crate serde;
 
 pub use wrapper::state::{
   State,
@@ -55,6 +59,9 @@ pub use wrapper::convert::{
   ToLua,
   FromLua
 };
+
+#[cfg(feature="serialize")]
+pub use wrapper::serde::Serde;
 
 pub use ffi::lua_Number as Number;
 pub use ffi::lua_Integer as Integer;

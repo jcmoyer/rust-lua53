@@ -20,4 +20,12 @@ gcc = "0.3"
 [dependencies]
 bitflags = "0.1"
 libc = "0.2.13"
+serde = { version="1.0.0", optional=true }
+quick-error = "1.2.0"
 
+[dev-dependencies]
+serde_json = "1.0.0"
+
+[features]
+default = ["serialize"]
+serialize = ["serde"]
