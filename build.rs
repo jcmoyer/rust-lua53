@@ -1,5 +1,3 @@
-extern crate gcc;
-
 use std::fs;
 use std::io;
 use std::env;
@@ -15,7 +13,7 @@ trait CommandExt {
 impl CommandExt for Command {
     /// Execute the command and return an error if it exited with a failure status.
     fn execute(&mut self) -> io::Result<()> {
-        let status = try!(self.status());
+        let status = self.status()?;
         if status.success() {
             Ok(())
         } else {
@@ -27,7 +25,7 @@ impl CommandExt for Command {
 }
 
 /// The command to build lua, with switches for different *nix targets.
-fn build_lua(tooling: &gcc::Tool, source: &Path, build: &Path) -> io::Result<()> {
+fn build_lua(tooling: &cc::Tool, source: &Path, build: &Path) -> io::Result<()> {
     // calculate the Lua platform name
     let platform = match env::var("TARGET").unwrap().split('-').nth(2).unwrap() {
         "windows" => "mingw",
@@ -133,7 +131,7 @@ fn prebuild() -> io::Result<()> {
         }
     };
     let build_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let mut config = gcc::Build::new();
+    let mut config = cc::Build::new();
     let msvc = env::var("TARGET").unwrap().split('-').last().unwrap() == "msvc";
     println!("cargo:rustc-link-lib=static=lua");
     if !msvc && lua_dir.join("liblua.a").exists() {
@@ -141,7 +139,7 @@ fn prebuild() -> io::Result<()> {
         println!("cargo:rustc-link-search=native={}", &lua_dir.display());
     } else if msvc {
         if !build_dir.join("lua.lib").exists() {
-            try!(build_lua_msvc(&lua_dir, &build_dir));
+            build_lua_msvc(&lua_dir, &build_dir)?;
         }
         println!("cargo:rustc-link-search=native={}", &build_dir.display());
     } else {
@@ -149,8 +147,8 @@ fn prebuild() -> io::Result<()> {
         if !build_dir.join("liblua.a").exists() {
             // Build liblua.a
             let tooling = config.get_compiler();
-            try!(fs::create_dir_all(&build_dir));
-            try!(build_lua(&tooling, &lua_dir, &build_dir));
+            fs::create_dir_all(&build_dir)?;
+            build_lua(&tooling, &lua_dir, &build_dir)?;
         }
         println!("cargo:rustc-link-search=native={}", &build_dir.display());
     }
@@ -159,14 +157,14 @@ fn prebuild() -> io::Result<()> {
     if !build_dir.join("glue.rs").exists() {
         // Compile and run glue.c
         let glue = build_dir.join("glue");
-        try!(config.include(&lua_dir).get_compiler().to_command()
+        config.include(&lua_dir).get_compiler().to_command()
             .arg("-I").arg(&lua_dir)
             .arg("src/glue/glue.c")
             .arg("-o").arg(&glue)
-            .execute());
-        try!(Command::new(glue)
+            .execute()?;
+        Command::new(glue)
             .arg(build_dir.join("glue.rs"))
-            .execute());
+            .execute()?;
     }
     Ok(())
 }
