@@ -136,6 +136,7 @@ fn prebuild() -> io::Result<()> {
     let mut config = gcc::Build::new();
     let msvc = env::var("TARGET").unwrap().split('-').last().unwrap() == "msvc";
     println!("cargo:rustc-link-lib=static=lua");
+    println!("cargo:include={}", lua_dir.display());
     if !msvc && lua_dir.join("liblua.a").exists() {
         // If liblua.a is already in lua_dir, use it
         println!("cargo:rustc-link-search=native={}", &lua_dir.display());
