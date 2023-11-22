@@ -459,7 +459,7 @@ impl State {
   }
 
   /// Pushes the given value onto the stack.
-  pub fn push<T: ToLua>(&mut self, value: T) {
+  pub fn push<T: ToLua>(&mut self, value: &T) {
     value.to_lua(self);
   }
 
